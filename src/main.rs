@@ -1,3 +1,17 @@
+mod input;
+mod interpreter;
+mod evaluator;
+
+
 fn main() {
-    println!("Hello, world!");
+    loop {
+        // get an input command
+
+        // interpret the command
+
+        // evaluate
+
+        // display
+
+    } //repeat
 }
