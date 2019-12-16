@@ -4,7 +4,7 @@ Program Structure (abstract):
 
 Recieve Input --> Interpret Input to Workable instructions -->
 
- perform mathmetical operations --> Print Output
+ perform mathmetical Operations --> Print Output
 
 
 Module Structure/ Architecture:
@@ -16,11 +16,11 @@ src/
 
 	interpreter.rs (low priority) -- Translates the user input to mathemetical instructions
 
-	evaluator/ -- Takes the input code, and performs the required operations
-		mod.rs -- "main" file, which loops through the input and chooses which operations to perform. Most importantly determines order of operations
+	evaluator/ -- Takes the input code, and performs the required Operations
+		mod.rs -- "main" file, which loops through the input and chooses which Operations to perform. Most importantly determines order of Operations
 		
-		operations/
-			mod.rs -- imports all operations modules into one big operations file
+		Operations/
+			mod.rs -- imports all Operations modules into one big Operations file
 		
 			arithmetic.rs
 

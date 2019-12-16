@@ -1,3 +1,5 @@
+mod evaluator;
+
 fn main() {
     loop {
         // get an input command
