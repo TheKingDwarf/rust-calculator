@@ -1,12 +1,20 @@
 mod operations;
 mod numbers;
 
-pub fn create_stack(commands: %str) -> stack {
+
+pub fn create_stack(commands: &str) -> Vec<> {
 
 }
 
-pub fn evaluate_stack(stack) {
+// Mutliply( Add(x, 8), 2)
+
+pub fn evaluate_stack(stack: Vec<>) {
+
+    let current_expr: Vec<Box<dyn operations>> = Vec::new();
+
     loop { // loop through every operation in the stack
+        let current_opperation = stack.pop();
+
 
     }
 }
