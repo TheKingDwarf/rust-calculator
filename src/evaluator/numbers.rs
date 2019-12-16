@@ -79,7 +79,7 @@ impl Operations for fraction {
             Variable(value) => Ok(Variable(variable {
                 symbol: value.symbol,
                 power: value.power,
-                coefficient: value.coefficient * num1.to_float();
+                coefficient: value.coefficient * num1.to_float()
             })),
         }
     }
@@ -201,16 +201,17 @@ impl Operations for f64 {
     fn add(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
             Float(value) => Ok(Float(num1 + value)),
-            Fraction(value) => Ok(Float(num1 + value.to_float()),
-            Variable(value) => Err( () ),
+            Fraction(value) => Ok(Float(num1 + value.to_float())),
+            Variable(value) => Err( () )
         }
     }
+
 
     fn sub(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
             Float(value) => Ok(Float(num1 - value)),
-            Fraction(value) => Ok(Float(num1 - value.to_float()),
-            Variable(value) => Err(() ),
+            Fraction(value) => Ok(Float(num1 - value.to_float())),
+            Variable(value) => Err( () )
         }
     }
 
@@ -218,15 +219,15 @@ impl Operations for f64 {
         match num2 {
             Float(value) => Ok(Float(num1 * value)),
             Fraction(value) => Ok(Float(num1 * value.to_float())),
-            Variable(_) => Err(()),
+            Variable(_) => Err(())
         }
     }
 
     fn divide(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
             Float(value) => Ok(Float(num1 / value)),
-            Fraction(value) => Ok(Float(num1 / value.to_float()),
-            Variable(_) => Err(()),
+            Fraction(value) => Ok(Float(num1 / value.to_float())),
+            Variable(_) => Err( () )
         }
     }
 
@@ -237,7 +238,7 @@ impl Operations for f64 {
 
 impl fraction {
     fn to_float(self) -> f64 {
-        self.numerator as f64 / self.denominator as f64;
+        self.numerator as f64 / self.denominator as f64
     }
 }
 
