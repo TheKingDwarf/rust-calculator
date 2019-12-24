@@ -8,6 +8,34 @@ use std::cmp::Ordering;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+pub enum Operand {
+    Exponent,
+    Multiply,
+    Divide,
+    Subtract,
+    Add,
+    LeftParanthesis,
+    RightParanthesis,
+}
+
+impl Operand {
+    pub fn priority(&self) -> i32 {
+        match *self {
+            Operand::Exponent => 3,
+            Operand::Multiply => 2,
+            Operand::Divide => 2,
+            Operand::Subtract => 1,
+            Operand::Add => 1,
+            Operand::LeftParanthesis => 4,
+            Operand::RightParanthesis => 4,
+        }
+    }
+}
+
+use Operand::*;
+
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Fraction {
     numerator: i64,
     denominator: i64,
@@ -23,15 +51,22 @@ pub struct Variable {
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+pub struct Inoperable {
+    values: Vec<Types>,
+    operations: Vec<Operand>,
+}
+
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Types {
     Float(f64),
     Fraction(Fraction),
     Variable(Variable),
+    Inoperable(Inoperable),
 }
-// name space the type enum so that we dont have to prepend each case in all these match statements with Types::
 use Types::*;
 
-trait Operations {
+pub trait Operations {
     // all of these methods want self, and another number, Fraction or var, and will return either Ok(T), where t is
     // number, Fraction or var, or a Err()
     fn add(num1: Self, num2: Types) -> Result<Types, ()>;
@@ -153,6 +188,9 @@ impl Operations for Variable {
                 power: num1.power,
             })),
             Variable(value) => if value.symbol == num1.symbol {
+                if num1.power + value.power == 0.0 { //handle case where combined power is
+                    return Ok(Float(value.coefficient * num1.coefficient));
+                }
                 Ok(Variable(Variable {
                     symbol: value.symbol,
                     coefficient: value.coefficient * num1.coefficient,
@@ -177,6 +215,9 @@ impl Operations for Variable {
                 power: num1.power,
             })),
             Variable(value) => if value.symbol == num1.symbol {
+                if num1.power - value.power == 0.0 { //handle case where power is 0
+                    return Ok(Float(value.coefficient * num1.coefficient));
+                }
                 Ok(Variable(Variable {
                     symbol: value.symbol,
                     coefficient: num1.coefficient / value.coefficient,
