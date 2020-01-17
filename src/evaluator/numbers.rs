@@ -6,19 +6,20 @@
 */
 use std::cmp::Ordering;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[allow(dead_code)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Operand {
     Exponent,
     Multiply,
     Divide,
     Subtract,
     Add,
-    LeftParanthesis,
-    RightParanthesis,
+    LeftParenthesis,
+    RightParenthesis,
 }
 
 impl Operand {
+    #[allow(dead_code)]
     pub fn priority(&self) -> i32 {
         match *self {
             Operand::Exponent => 3,
@@ -26,43 +27,40 @@ impl Operand {
             Operand::Divide => 2,
             Operand::Subtract => 1,
             Operand::Add => 1,
-            Operand::LeftParanthesis => 4,
-            Operand::RightParanthesis => 4,
+            Operand::LeftParenthesis => 4,
+            Operand::RightParenthesis => 4,
         }
     }
 }
 
+#[allow(unused_imports)]
 use Operand::*;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Fraction {
     numerator: i64,
     denominator: i64,
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
     symbol: char,
     power: f64,
     coefficient: f64,
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub struct Inoperable {
-    values: Vec<Types>,
-    operations: Vec<Operand>,
+#[derive(Debug, PartialEq, Clone)]
+pub struct Expression {
+    pub values: Vec<Types>,
+    pub operation: Operand,
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Types {
     Float(f64),
     Fraction(Fraction),
     Variable(Variable),
-    Inoperable(Inoperable),
+    Expression(Expression),
 }
 use Types::*;
 
@@ -89,7 +87,11 @@ impl Operations for Fraction {
                 numerator: num1.numerator * value.denominator + value.numerator * num1.denominator,
                 denominator: num1.denominator * value.denominator,
             })),
-            Variable(_) => Err(())
+            Variable(value) => Ok(Expression(Expression {
+                operation: Operand::Add,
+                values: vec![Fraction(num1), Variable(value)],
+            })),
+            Expression(_) => Err(()),
         }
     }
 
@@ -100,7 +102,11 @@ impl Operations for Fraction {
                 numerator: num1.numerator * value.denominator - value.numerator * num1.denominator,
                 denominator: num1.denominator * value.denominator,
             })),
-            Variable(_) => Err(())
+            Variable(value) => Ok(Expression(Expression {
+                operation: Operand::Subtract,
+                values: vec![Fraction(num1), Variable(value)],
+            })),
+            Expression(_) => Err(()),
         }
     }
 
@@ -116,6 +122,7 @@ impl Operations for Fraction {
                 power: value.power,
                 coefficient: value.coefficient * num1.to_float()
             })),
+            Expression(_) => Err(()),
         }
     }
 
@@ -131,6 +138,7 @@ impl Operations for Fraction {
                 power: value.power * -1 as f64,
                 coefficient: num1.to_float() / value.coefficient,
             })),
+            Expression(_) => Err(()),
         }
     }
 
@@ -154,8 +162,12 @@ impl Operations for Variable {
                     power: value.power,
                 }))
             } else {
-                 Err(())
+                Ok(Expression(Expression {
+                  operation: Operand::Add,
+                  values: vec![Variable(num1), Variable(value)],
+                }))
             },
+            Expression(_) => Err(()),
         }
     }
 
@@ -170,8 +182,12 @@ impl Operations for Variable {
                     power: value.power,
                 }))
             } else {
-                 Err(())
+                Ok(Expression(Expression {
+                    operation: Operand::Subtract,
+                    values: vec![Variable(num1), Variable(value)],
+                }))
              },
+             Expression(_) => Err(()),
         }
     }
 
@@ -197,8 +213,12 @@ impl Operations for Variable {
                     power: num1.power + value.power,
                 }))
             } else {
-                Err(())
+                Ok(Expression(Expression {
+                    operation: Operand::Multiply,
+                    values: vec![Variable(num1), Variable(value)],
+                }))
             },
+            Expression(_) => Err(()),
         }
     }
 
@@ -224,8 +244,12 @@ impl Operations for Variable {
                     power: num1.power - value.power,
                 }))
             } else {
-                Err( () )
-            }
+                Ok(Expression(Expression {
+                    operation: Operand::Divide,
+                    values: vec![Variable(num1), Variable(value)],
+                }))
+            },
+            Expression(_) => Err(()),
         }
     }
 
@@ -243,16 +267,23 @@ impl Operations for f64 {
         match num2 {
             Float(value) => Ok(Float(num1 + value)),
             Fraction(value) => Ok(Float(num1 + value.to_float())),
-            Variable(_) => Err( () )
+            Variable(value) => Ok(Expression(Expression {
+                operation: Operand::Add,
+                values: vec![Float(num1), Variable(value)],
+            })),
+            Expression(_) => Err(()),
         }
     }
-
 
     fn sub(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
             Float(value) => Ok(Float(num1 - value)),
             Fraction(value) => Ok(Float(num1 - value.to_float())),
-            Variable(_) => Err( () )
+            Variable(value) => Ok(Expression(Expression {
+                operation: Operand::Subtract,
+                values: vec![Float(num1), Variable(value)],
+            })),
+            Expression(_) => Err(()),
         }
     }
 
@@ -260,7 +291,11 @@ impl Operations for f64 {
         match num2 {
             Float(value) => Ok(Float(num1 * value)),
             Fraction(value) => Ok(Float(num1 * value.to_float())),
-            Variable(_) => Err(())
+            Variable(value) => Ok(Expression(Expression {
+                operation: Operand::Multiply,
+                values: vec![Float(num1), Variable(value)],
+            })),
+            Expression(_) => Err(()),
         }
     }
 
@@ -268,7 +303,11 @@ impl Operations for f64 {
         match num2 {
             Float(value) => Ok(Float(num1 / value)),
             Fraction(value) => Ok(Float(num1 / value.to_float())),
-            Variable(_) => Err( () )
+            Variable(value) => Ok(Expression(Expression {
+                operation: Operand::Divide,
+                values: vec![Float(num1), Variable(value)],
+            })),
+            Expression(_) => Err(()),
         }
     }
 
@@ -277,12 +316,84 @@ impl Operations for f64 {
     }
 }
 
+impl Operations for Expression {
+    #[allow(unused_variables)]
+    fn add(num1: Self, num2: Types) -> Result<Types, ()> {
+        Err(())
+    }
+    #[allow(unused_variables)]
+    fn sub(num1: Self, num2: Types) -> Result<Types, ()> {
+        Err(())
+
+    }
+    #[allow(unused_variables)]
+    fn multiply(num1: Self, num2: Types) -> Result<Types, ()>{
+        Err(())
+    }
+    #[allow(unused_variables)]
+    fn divide(num1: Self, num2: Types) -> Result<Types, ()> {
+        Err(())
+    }
+    #[allow(unused_variables)]
+    fn negative(num1: Self) -> Self {
+        num1
+    }
+}
+
+/*
+impl Operations for Inoperable {
+    fn add(num1: Self, num2: Types) -> Result<Types, ()> {
+
+        // iterate through the values in the values vector
+        for num in num1.values.iter() {
+            match add(num, num2) {
+                Inoperable(_) => continue, // if the operation would return an Inoperable, we dont want to do it
+                _ => { // passes the first test, but now we need to check other things
+
+                    //check previous operation (from operations vector)
+
+                    // check next operation
+
+                    // if both checks pass, we can actually perform the add operation
+
+                    //perform the operation, and make a new Inoperable struct to return
+
+                } //is this just complete lunacy or does it look kinda reasonable to you guys?
+            }
+        }
+
+        // if all of that failed, then we need to instead return a new Inoperable struct, with the current
+        // add option appended to it (or should we prepend it to the inoperable struct?)
+
+
+        }
+    }
+
+    fn sub(num1: Self, num2: Types) -> Result<Types, ()> {
+        todo!();
+    }
+
+    fn multiply(num1: Self, num2: Types) -> Result<Types, ()>{
+        todo!();
+    }
+
+    fn divide(num1: Self, num2: Types) -> Result<Types, ()> {
+        todo!();
+    }
+
+    fn negative(num1: Self) -> Self {
+        todo!();
+    }
+}
+*/
+
+
 impl Fraction {
     fn to_float(self) -> f64 {
         self.numerator as f64 / self.denominator as f64
     }
 
-
+    #[allow(dead_code)]
     fn simplify(self) -> Fraction {
         let gcd = gcd(self.numerator, self.denominator);
 
@@ -294,7 +405,8 @@ impl Fraction {
 }
 
 //using Euclidean algorithm
-fn gcd(num1: i64, num2: i64) -> i64{
+#[allow(dead_code)]
+fn gcd(num1: i64, num2: i64) -> i64 {
     let order: (i64, i64) = match num1.cmp(&num2) { //sort the pair of values into a tuple
         Ordering::Greater => (num1, num2),
         Ordering::Less => (num2, num1),
@@ -313,7 +425,7 @@ mod tests {
     use super::*;
 
     /* Variable Type Tests Start */
-    #[test]
+/*    #[test]
     fn adding_variables_same_power() {
         let var1 = Variable {
             symbol: 'x',
@@ -330,9 +442,10 @@ mod tests {
             Ok(Variable(some)) => some,
             _ => panic!(),
         };
-
+    Expression(Inoperable), //unsure on the functionality of this test piece, maybe I deleted a line?
+// yea this means nothing by itself. maybe we should just delete it, and fix the test later?
         assert_eq!(var3.coefficient, 5.0);
-    }
+    }*/
 
     #[test]
     fn adding_variables_different_power() {
