@@ -15,8 +15,6 @@ pub enum Expression {
 use Expression::*;
 
 pub fn create_stack(commands: &str) -> Vec<Expression> {
-
-
     //create a vector containing enum variants for types and operations
     //evaluate the vector in the evaluate_stack function by separating
     //it into operations and types (which the Expression enum is useful for)
@@ -39,12 +37,12 @@ pub fn evaluate_stack(stack: &mut Vec<Expression>) {
 
         match curr_val {
             Type(t) => nums.push(t),
-            Op(LeftParanthesis) => ops.push(LeftParanthesis),
-            Op(RightParanthesis) => {
-                while ops.pop() != Some(LeftParanthesis) {
+            Op(LeftParenthesis) => ops.push(LeftParenthesis),
+            Op(RightParenthesis) => {
+                while ops.pop() != Some(LeftParenthesis) {
                     pop_expression(&mut nums, &mut ops);
                 }
-                stack.pop(); //get rid of Left paranthesis
+                stack.pop(); //get rid of Left parenthesis
             },
 
             Op(operator) => {
@@ -100,5 +98,8 @@ fn get_operation<T: Operations>(values: (T, Types), op: Operand) -> Result<Types
         Divide => Operations::divide(values.0, values.1),
         Subtract => Operations::sub(values.0, values.1),
         Add => Operations::add(values.0, values.1),
+        //because we have parenthesis, etc as part of our Operand enum
+        //we must cover the rest of the cases
+        _ => Err(()),
     }
 }

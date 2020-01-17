@@ -1,10 +1,5 @@
-/*todo:
--fix all of the Err(()) enums-> figure out how to handle in evaluate_stack
--write more tests
-
-
-*/
 use std::cmp::Ordering;
+use std::cell::Cell;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -14,8 +9,8 @@ pub enum Operand {
     Divide,
     Subtract,
     Add,
-    LeftParanthesis,
-    RightParanthesis,
+    LeftParenthesis,
+    RightParenthesis,
 }
 
 impl Operand {
@@ -26,8 +21,8 @@ impl Operand {
             Operand::Divide => 2,
             Operand::Subtract => 1,
             Operand::Add => 1,
-            Operand::LeftParanthesis => 4,
-            Operand::RightParanthesis => 4,
+            Operand::LeftParenthesis => 4,
+            Operand::RightParenthesis => 4,
         }
     }
 }
@@ -49,15 +44,18 @@ pub struct Variable {
     coefficient: f64,
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+//unfortunately Debug and PartialEq are not compatible with Cell
+//this will likely screw up our tests later on but for now interior mutability is
+//an alternative to making the
+//#[derive(Debug)]
+//#[derive(PartialEq)]
 pub struct Inoperable {
-    values: Vec<Types>,
-    operations: Vec<Operand>,
+    values: Cell<Vec<Types>>,
+    operations: Cell<Vec<Operand>>,
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+//#[derive(Debug)]
+//#[derive(PartialEq)]
 pub enum Types {
     Float(f64),
     Fraction(Fraction),
@@ -89,7 +87,8 @@ impl Operations for Fraction {
                 numerator: num1.numerator * value.denominator + value.numerator * num1.denominator,
                 denominator: num1.denominator * value.denominator,
             })),
-            Variable(_) => Err(())
+            Variable(_) => Err(()),
+            Inoperable(_) => Err(()),
         }
     }
 
@@ -100,7 +99,8 @@ impl Operations for Fraction {
                 numerator: num1.numerator * value.denominator - value.numerator * num1.denominator,
                 denominator: num1.denominator * value.denominator,
             })),
-            Variable(_) => Err(())
+            Variable(_) => Err(()),
+            Inoperable(_) => Err(()),
         }
     }
 
@@ -116,6 +116,7 @@ impl Operations for Fraction {
                 power: value.power,
                 coefficient: value.coefficient * num1.to_float()
             })),
+            Inoperable(_) => Err(()),
         }
     }
 
@@ -131,6 +132,7 @@ impl Operations for Fraction {
                 power: value.power * -1 as f64,
                 coefficient: num1.to_float() / value.coefficient,
             })),
+            Inoperable(_) => Err(()),
         }
     }
 
@@ -156,6 +158,7 @@ impl Operations for Variable {
             } else {
                  Err(())
             },
+            Inoperable(_) => Err(()),
         }
     }
 
@@ -172,6 +175,7 @@ impl Operations for Variable {
             } else {
                  Err(())
              },
+             Inoperable(_) => Err(()),
         }
     }
 
@@ -199,6 +203,7 @@ impl Operations for Variable {
             } else {
                 Err(())
             },
+            Inoperable(_) => Err(()),
         }
     }
 
@@ -225,7 +230,8 @@ impl Operations for Variable {
                 }))
             } else {
                 Err( () )
-            }
+            },
+            Inoperable(_) => Err(()),
         }
     }
 
@@ -243,7 +249,8 @@ impl Operations for f64 {
         match num2 {
             Float(value) => Ok(Float(num1 + value)),
             Fraction(value) => Ok(Float(num1 + value.to_float())),
-            Variable(_) => Err( () )
+            Variable(_) => Err( () ),
+            Inoperable(_) => Err(()),
         }
     }
 
@@ -252,7 +259,8 @@ impl Operations for f64 {
         match num2 {
             Float(value) => Ok(Float(num1 - value)),
             Fraction(value) => Ok(Float(num1 - value.to_float())),
-            Variable(_) => Err( () )
+            Variable(_) => Err( () ),
+            Inoperable(_) => Err(()),
         }
     }
 
@@ -260,7 +268,9 @@ impl Operations for f64 {
         match num2 {
             Float(value) => Ok(Float(num1 * value)),
             Fraction(value) => Ok(Float(num1 * value.to_float())),
-            Variable(_) => Err(())
+            Variable(_) => Err(()),
+            Inoperable(_) => Err(()),
+
         }
     }
 
@@ -268,12 +278,90 @@ impl Operations for f64 {
         match num2 {
             Float(value) => Ok(Float(num1 / value)),
             Fraction(value) => Ok(Float(num1 / value.to_float())),
-            Variable(_) => Err( () )
+            Variable(_) => Err( () ),
+            Inoperable(_) => Err(()),
         }
     }
 
     fn negative(num1: Self) -> Self {
         -num1
+    }
+}
+
+impl Operations for Inoperable {
+
+//here we have a problem because we cannot declare the vector inside of the struct
+//to always be mutable unless the struct itself is mutable- mutability is inherited
+    fn add(num1: Self, num2: Types) -> Result<Types, ()> {
+
+        //janky implementation for messing with the vectors inside of Cells
+        num1.add_operand(Operand::Add);
+
+        match num2 {
+            Float(value) => num1.add_value(Float(value)),
+            Fraction(value) => num1.add_value(Fraction(value)),
+            Variable(value) => num1.add_value(Variable(value)),
+            Inoperable(value) => num1.add_value(Inoperable(value)),
+        }
+    }
+
+    fn sub(num1: Self, num2: Types) -> Result<Types, ()> {
+
+        num1.add_operand(Operand::Subtract);
+
+        match num2 {
+            Float(value) => num1.add_value(Float(value)),
+            Fraction(value) => num1.add_value(Fraction(value)),
+            Variable(value) => num1.add_value(Variable(value)),
+            Inoperable(value) => num1.add_value(Inoperable(value)),
+        }
+    }
+
+    fn multiply(num1: Self, num2: Types) -> Result<Types, ()> {
+
+        num1.add_operand(Operand::Multiply);
+
+        match num2 {
+            Float(value) => num1.add_value(Float(value)),
+            Fraction(value) => num1.add_value(Fraction(value)),
+            Variable(value) => num1.add_value(Variable(value)),
+            Inoperable(value) => num1.add_value(Inoperable(value)),
+        }
+    }
+
+    fn divide(num1: Self, num2: Types) -> Result<Types, ()> {
+        num1.add_operand(Operand::Divide);
+
+        match num2 {
+            Float(value) => num1.add_value(Float(value)),
+            Fraction(value) => num1.add_value(Fraction(value)),
+            Variable(value) => num1.add_value(Variable(value)),
+            Inoperable(value) => num1.add_value(Inoperable(value)),
+        }
+    }
+
+    fn negative(num1: Self) -> Self {
+        num1
+    }
+}
+
+impl Inoperable {
+
+    //janky way of modifying the vector
+    fn add_operand(&self, operand: Operand) {
+        let mut ops = self.operations.take();
+        ops.push(operand);
+        self.operations.set(ops);
+
+    }
+
+    //same here
+    fn add_value(self, value: Types) -> Result<Types, ()>{
+        let mut vals = self.values.take();
+        vals.push(value);
+        self.values.set(vals);
+
+        Ok(Inoperable(self))
     }
 }
 
