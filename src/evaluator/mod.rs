@@ -259,4 +259,59 @@ mod tests {
 
         assert_eq!(stack, answer);
     }
+
+    #[test]
+    fn variable_div_by_float(){
+        let mut stack = vec![Type(Variable(Variable{
+            symbol: 'x',
+            power: 1.0,
+            coefficient: 9.0,
+        })), Op(Divide), Type(Float(3.0))];
+
+        let answer = evaluate_stack(&mut stack);
+
+        let cmp_answer = Type(Variable(Variable{
+            symbol: 'x',
+            power: 1.0,
+            coefficient: 3.0,
+        }));
+
+        assert_eq!(vec![cmp_answer], answer);
+
+
+    }
+
+    #[test]
+    fn dividing_floats(){
+        let mut stack = vec![Type(Float(220.02)), Op(Divide), Type(Float(11.4))];
+
+        let answer = evaluate_stack(&mut stack);
+
+        assert_eq!(answer, vec![Type(Float(19.3))]);
+
+    }
+
+    #[test]
+    fn variable_division_OOO(){
+        let mut stack = vec![Type(Variable(Variable{
+            symbol: 'x',
+            power: 1.0,
+            coefficient: 9.0,
+        })),
+        Op(Divide), Op(RightParenthesis),
+        Type(Float(3.0)), Op(Multiply), Type(Float(2.0)), Op(Add), Type(Float(3.0)),
+        Op(LeftParenthesis)];
+
+        let cmp_answer = vec![Type(Variable(Variable{
+            symbol: 'x',
+            power: 1.0,
+            coefficient: 1.0,
+        }))];
+
+        let answer = evaluate_stack(&mut stack);
+
+        assert_eq!(answer, cmp_answer);
+
+    }
+
 }
