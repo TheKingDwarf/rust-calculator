@@ -27,8 +27,8 @@ impl Operand {
             Operand::Divide => 2,
             Operand::Subtract => 1,
             Operand::Add => 1,
-            Operand::LeftParenthesis => 4,
-            Operand::RightParenthesis => 4,
+            Operand::LeftParenthesis => -1,
+            Operand::RightParenthesis => -1,
         }
     }
 }
@@ -38,15 +38,15 @@ use Operand::*;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Fraction {
-    numerator: i64,
-    denominator: i64,
+    pub numerator: i64,
+    pub denominator: i64,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
-    symbol: char,
-    power: f64,
-    coefficient: f64,
+    pub symbol: char,
+    pub power: f64,
+    pub coefficient: f64,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -455,12 +455,15 @@ mod tests {
             coefficient: 1.0,
         };
         let var2 = Variable {
-            symbol: 'y',
+            symbol: 'x',
             power: 2.0,
             coefficient: 4.0,
         };
 
-        assert_eq!(Err(()), Variable::add(var1, Variable(var2)));
+        assert_eq!(Ok(Expression(Expression{
+            operation: Operand::Add,
+            values: vec![Variable(var1.clone()), Variable(var2.clone())]
+        })), Variable::add(var1, Variable(var2)));
     }
 
     #[test]

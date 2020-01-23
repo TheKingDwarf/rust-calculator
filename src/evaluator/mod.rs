@@ -11,6 +11,7 @@ use crate::evaluator::numbers::{
 };
 
 #[allow(dead_code)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ExpressionComponents {
     Type(Types),
     Op(Operand),
@@ -47,37 +48,67 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
             Type(t) => nums.push(t),
             Op(LeftParenthesis) => ops.push(LeftParenthesis),
             Op(RightParenthesis) => {
-                while ops.pop() != Some(LeftParenthesis) {
+                println!("Popping right )");
+                while ops.last().unwrap().clone() != LeftParenthesis {
                     pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
                 }
-                stack.pop(); //get rid of Left paranthesis
+                ops.pop(); //get rid of Left paranthesis
             },
 
             Op(operator) => {
-                while !ops.is_empty() && ops[0].priority() >= operator.priority() {
-                    pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
+                if !ops.is_empty() {
+                    let top = ops.last().unwrap().clone();
+
+                    while !ops.is_empty() && top.priority() >= operator.priority() &&
+                    ((top != LeftParenthesis) || (top != RightParenthesis)) {
+                        pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
+
+                        //TODO revise as to not have to let top
+                        let top = ops.last().unwrap().clone();
+                    }
                 }
 
                 ops.push(operator);
             },
         }
 
-        while !ops.is_empty() {
-            pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
-        }
+    }
+
+    while !ops.is_empty() {
+        pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
     }
 
     // push the simplified value to inoperable expression
-    inoperable_expression.push(Type(nums.pop().unwrap()));
+    // or turn a final expression into its componenets and push to inoperable_expression
+    match nums.pop().unwrap() {
+        Expression(exp) => {
+            inoperable_expression.push(Type(exp.values[0].clone()));
+            inoperable_expression.push(Op(exp.operation.clone()));
+            inoperable_expression.push(Type(exp.values[1].clone()));
+        },
+        other => inoperable_expression.push(Type(other)),
+    }
+
 
     inoperable_expression
  }
 
 // simply abstracted this behaviour to a function since its called multiple times above
  fn pop_expression(nums: &mut Vec<Types>, ops: &mut Vec<Operand>, inoperable_expression: &mut Vec<ExpressionComponents>) {
+     //println!("Nums: {:?}, Ops: {:?}", &nums, &ops);
      let exp = Expression {
-         values: vec![nums.pop().unwrap(), nums.pop().unwrap()],
-         operation: ops.pop().unwrap(),
+         values: vec![match nums.pop(){
+             Some(value) => value,
+             None => panic!("Failed 82"),
+         },
+         match nums.pop(){
+             Some(value) => value,
+             None => panic!("Failed 86"),
+         }],
+         operation: match ops.pop(){
+             Some(value) => value,
+             None => panic!("Failed 90"),
+         }
      };
 
      match &exp.values[0] {
@@ -135,26 +166,28 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
         _ => (),// do nothing
      };
 
-     let returned = evaluate_expression(exp).unwrap_or_else(|_e| {
-         eprintln!("Failed");
-         std::process::exit(1);
-     });
+     let returned = evaluate_expression(exp);
 
      nums.push(returned);
  }
 
  //this function will translate an operator into an expression evaluation
  //using the functions we made in numbers.rs
-pub fn evaluate_expression(expression: Expression) -> Result<Types, ()> {
+pub fn evaluate_expression(expression: Expression) -> Types {
     /*  youll notice weird redundancy going on here
         its because each one of the types inside an enum is different,
         so each case must be written out explicitly :(
     */
-    match expression.values[0].clone() {
-        Float(t) => get_operation((t, expression.values[1].clone()), expression.operation),
-        Fraction(t) => get_operation((t, expression.values[1].clone()), expression.operation),
-        Variable(t) => get_operation((t, expression.values[1].clone()), expression.operation),
+    let returned = match expression.values[0].clone() {
+        Float(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
+        Fraction(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
+        Variable(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
         _ => Err(()),
+    };
+
+    match returned {
+        Ok(t) => t,
+        Err(_) => Expression(expression),
     }
 }
 
@@ -166,5 +199,64 @@ fn get_operation<T: Operations>(values: (T, Types), op: Operand) -> Result<Types
         Subtract => Operations::sub(values.0, values.1),
         Add => Operations::add(values.0, values.1),
         _ => Err(()),
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    //pub use numbers::Fraction;
+
+    #[test]
+    fn multiplying_floats(){
+        let mut stack = vec![Type(Float(11.4)), Op(Multiply), Type(Float(19.3))];
+
+        assert_eq!(vec![Type(Float(220.02))], evaluate_stack(&mut stack));
+    }
+
+    #[test]
+    fn add_fraction_to_float(){
+        let mut stack = vec![Type(Float(11.25)), Op(Add), Type(Fraction(
+            Fraction{
+                numerator: 3,
+                denominator: 4
+            }))];
+
+        assert_eq!(vec![Type(Float(12.0))], evaluate_stack(&mut stack));
+    }
+
+    //OOO = order of operations
+    #[test]
+    fn float_OOO(){
+        let mut stack = vec![
+        Op(RightParenthesis),
+        Type(Float(1.0)), Op(Add), Type(Float(5.0)),
+        Op(LeftParenthesis),
+        Op(Multiply), Type(Float(3.0))];
+
+        let answer = evaluate_stack(&mut stack);
+        println!("answer: {:?}", &answer);
+
+        assert_eq!(vec![Type(Float(18.0))], answer);
+    }
+
+    #[test]
+    fn variable_OOO(){
+
+        let mut stack = vec![
+            Type(Variable(Variable {
+                symbol: 'x',
+                power: 1.0,
+                coefficient: 1.0,
+            })),
+            Op(Add),
+            Type(Float(4.0))
+        ];
+
+        let answer = evaluate_stack(&mut stack.clone());
+        println!("answer: {:?}", &answer);
+
+        assert_eq!(stack, answer);
     }
 }
