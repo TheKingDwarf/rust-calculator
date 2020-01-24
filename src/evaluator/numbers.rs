@@ -31,6 +31,13 @@ impl Operand {
             Operand::RightParenthesis => -1,
         }
     }
+
+    pub fn is_parenthesis(&self) -> bool {
+        match *self {
+            Operand::LeftParenthesis | Operand::RightParenthesis => true,
+            _ => false,
+        }
+    }
 }
 
 #[allow(unused_imports)]
@@ -339,54 +346,6 @@ impl Operations for Expression {
         num1
     }
 }
-
-/*
-impl Operations for Inoperable {
-    fn add(num1: Self, num2: Types) -> Result<Types, ()> {
-
-        // iterate through the values in the values vector
-        for num in num1.values.iter() {
-            match add(num, num2) {
-                Inoperable(_) => continue, // if the operation would return an Inoperable, we dont want to do it
-                _ => { // passes the first test, but now we need to check other things
-
-                    //check previous operation (from operations vector)
-
-                    // check next operation
-
-                    // if both checks pass, we can actually perform the add operation
-
-                    //perform the operation, and make a new Inoperable struct to return
-
-                } //is this just complete lunacy or does it look kinda reasonable to you guys?
-            }
-        }
-
-        // if all of that failed, then we need to instead return a new Inoperable struct, with the current
-        // add option appended to it (or should we prepend it to the inoperable struct?)
-
-
-        }
-    }
-
-    fn sub(num1: Self, num2: Types) -> Result<Types, ()> {
-        todo!();
-    }
-
-    fn multiply(num1: Self, num2: Types) -> Result<Types, ()>{
-        todo!();
-    }
-
-    fn divide(num1: Self, num2: Types) -> Result<Types, ()> {
-        todo!();
-    }
-
-    fn negative(num1: Self) -> Self {
-        todo!();
-    }
-}
-*/
-
 
 impl Fraction {
     fn to_float(self) -> f64 {

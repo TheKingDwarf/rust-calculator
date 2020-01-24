@@ -48,7 +48,6 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
             Type(t) => nums.push(t),
             Op(LeftParenthesis) => ops.push(LeftParenthesis),
             Op(RightParenthesis) => {
-                println!("Popping right )");
                 while ops.last().unwrap().clone() != LeftParenthesis {
                     pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
                 }
@@ -57,14 +56,14 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
             Op(operator) => {
                 if !ops.is_empty() {
-                    let top = ops.last().unwrap().clone();
+                    while !ops.is_empty() {
+                        let top = ops.last().unwrap().clone(); //non-destructively checks the top member of ops
 
-                    while !ops.is_empty() && top.priority() >= operator.priority() &&
-                    ((top != LeftParenthesis) || (top != RightParenthesis)) {
+                        if top.priority() < operator.priority() || top.is_parenthesis() {
+                            break;
+                        }
+
                         pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
-
-                        //TODO revise as to not have to let top
-                        let top = ops.last().unwrap().clone();
                     }
                 }
 
@@ -97,27 +96,17 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
  fn pop_expression(nums: &mut Vec<Types>, ops: &mut Vec<Operand>, inoperable_expression: &mut Vec<ExpressionComponents>) {
      //println!("Nums: {:?}, Ops: {:?}", &nums, &ops);
      let exp = Expression {
-         values: vec![match nums.pop(){
-             Some(value) => value,
-             None => panic!("Failed 82"),
-         },
-         match nums.pop(){
-             Some(value) => value,
-             None => panic!("Failed 86"),
-         }],
-         operation: match ops.pop(){
-             Some(value) => value,
-             None => panic!("Failed 90"),
-         }
+         values: vec![nums.pop().unwrap(), nums.pop().unwrap()],
+         operation: ops.pop().unwrap(),
      };
 
      match &exp.values[0] {
-         Expression(exp) => {
+         Expression(internal_exp) => {
              // split the Expression, and push to inoperable_expression
             { // brackets here for scoping reasons
-                inoperable_expression.push(Type(exp.values[0].clone()));
-                inoperable_expression.push(Op(exp.operation.clone()));
-                inoperable_expression.push(Type(exp.values[1].clone()));
+                inoperable_expression.push(Type(internal_exp.values[0].clone()));
+                inoperable_expression.push(Op(internal_exp.operation.clone()));
+                inoperable_expression.push(Type(internal_exp.values[1].clone()));
             }
              //other setup
              inoperable_expression.push(Op(exp.operation.clone()));
@@ -160,7 +149,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
      match exp.values[1] {
          Expression(_) => { //put back on stack
-             // im pretty positive this is actually an error case,
+             // im pretty positive this is actually an error case, ~Logan
              panic!("Why was an expression at exp.values.1? mod.rs line 127");
          }
         _ => (),// do nothing
@@ -185,7 +174,7 @@ pub fn evaluate_expression(expression: Expression) -> Types {
         _ => Err(()),
     };
 
-    match returned {
+    match returned { // iff the operation returned error, return the input expression
         Ok(t) => t,
         Err(_) => Expression(expression),
     }
@@ -230,10 +219,12 @@ mod tests {
     #[test]
     fn float_OOO(){
         let mut stack = vec![
-        Op(RightParenthesis),
-        Type(Float(1.0)), Op(Add), Type(Float(5.0)),
         Op(LeftParenthesis),
+        Type(Float(1.0)), Op(Add), Type(Float(5.0)),
+        Op(RightParenthesis),
         Op(Multiply), Type(Float(3.0))];
+
+        stack.reverse();
 
         let answer = evaluate_stack(&mut stack);
         println!("answer: {:?}", &answer);
@@ -242,8 +233,7 @@ mod tests {
     }
 
     #[test]
-    fn variable_OOO(){
-
+    fn variable_add_float(){
         let mut stack = vec![
             Type(Variable(Variable {
                 symbol: 'x',
@@ -298,9 +288,9 @@ mod tests {
             power: 1.0,
             coefficient: 9.0,
         })),
-        Op(Divide), Op(RightParenthesis),
+        Op(Divide), Op(LeftParenthesis),
         Type(Float(3.0)), Op(Multiply), Type(Float(2.0)), Op(Add), Type(Float(3.0)),
-        Op(LeftParenthesis)];
+        Op(RightParenthesis)];
 
         let cmp_answer = vec![Type(Variable(Variable{
             symbol: 'x',
