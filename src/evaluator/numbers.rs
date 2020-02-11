@@ -33,7 +33,7 @@ impl Operand {
 }
 
 #[allow(unused_imports)]
-use Operand::*;
+pub use Operand::*;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Fraction {
@@ -61,7 +61,7 @@ pub enum Types {
     Variable(Variable),
     Expression(Expression),
 }
-use Types::*;
+pub use Types::*;
 
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Clone)]
@@ -70,4 +70,4 @@ pub enum ExpressionComponents {
     Op(Operand),
 }
 
-use ExpressionComponents::*;
+pub use ExpressionComponents::*;

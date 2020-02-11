@@ -4,8 +4,8 @@
 
 
 */
+use super::numbers::*;
 
-use crate::numbers::*;
 use std::cmp::Ordering;
 
 pub trait Operations {
@@ -245,16 +245,17 @@ impl Operations for f64 {
 
     fn divide(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
-            Float(value) =>
-            if (num1 / value).fract() == 0 { // if dividing gives an int
-                Ok(Float(num1 / value))
-            } else if num1.fract() == 0 && value.fract() == 0 { //convert to fraction if possible
-                Ok(Fraction(Fraction {
-                    numerator: num1 as i64,
-                    denominator: value as i64 , 
-                 })
-            } else {
-                Ok(Float(num1 / value))
+            Float(value) => {
+                if (num1 / value).fract() == 0.0 { // if dividing gives an int
+                    Ok(Float(num1 / value))
+                } else if num1.fract() == 0.0 && value.fract() == 0.0 { //convert to fraction if possible
+                    Ok(Fraction(Fraction {
+                        numerator: num1 as i64,
+                        denominator: value as i64,
+                    }))
+                } else {
+                    Ok(Float(num1 / value))
+                }
             },
             Fraction(value) => Ok(Float(num1 / value.to_float())),
             Variable(value) => Ok(Expression(Expression {

@@ -1,6 +1,10 @@
 #[allow(unused_imports)]
-use crate::operations::*;
 
+mod operations;
+mod numbers;
+
+use self::numbers::*;
+use self::operations::*;
 
 #[allow(dead_code)]
 pub fn create_stack(_commands: &str) -> Vec<ExpressionComponents> {
