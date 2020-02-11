@@ -1,23 +1,6 @@
-mod numbers;
-
 #[allow(unused_imports)]
-use crate::evaluator::numbers::{
-    Types::{self, *},
-    Operand::{self, *},
-    Variable,
-    Fraction,
-    Operations, // Operations trait
-    Expression,
-};
+use crate::operations::*;
 
-#[allow(dead_code)]
-#[derive(Debug, PartialEq, Clone)]
-pub enum ExpressionComponents {
-    Type(Types),
-    Op(Operand),
-}
-
-use ExpressionComponents::*;
 
 #[allow(dead_code)]
 pub fn create_stack(_commands: &str) -> Vec<ExpressionComponents> {
@@ -213,6 +196,25 @@ mod tests {
             }))];
 
         assert_eq!(vec![Type(Float(12.0))], evaluate_stack(&mut stack));
+    }
+
+    #[test]
+    fn floats_to_fraction() { //check that floats can be converted to fractions
+        let mut stack = vec![Type(Float(3.0)), Op(Divide), Type(Float(4.0))];
+
+        assert_eq!(vec![Type(Fraction(Fraction {
+            numerator: 3,
+            denominator: 4
+        }))], evaluate_stack(&mut stack));
+    }
+
+    fn floats_to_float_not_fraction() { //check that we dont convert floats to fractions unnescarilly
+        let mut stack = vec![Type(Float(8.0)), Op(Divide), Type(Float(4.0))];
+
+        assert_ne!(vec![Type(Fraction(Fraction {
+            numerator: 8,
+            denominator: 4
+        }))], evaluate_stack(&mut stack));
     }
 
     //OOO = order of operations

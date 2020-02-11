@@ -4,72 +4,9 @@
 
 
 */
+
+use crate::numbers::*;
 use std::cmp::Ordering;
-
-#[allow(dead_code)]
-#[derive(Debug, PartialEq, Clone)]
-pub enum Operand {
-    Exponent,
-    Multiply,
-    Divide,
-    Subtract,
-    Add,
-    LeftParenthesis,
-    RightParenthesis,
-}
-
-impl Operand {
-    #[allow(dead_code)]
-    pub fn priority(&self) -> i32 {
-        match *self {
-            Operand::Exponent => 3,
-            Operand::Multiply => 2,
-            Operand::Divide => 2,
-            Operand::Subtract => 1,
-            Operand::Add => 1,
-            Operand::LeftParenthesis => -1,
-            Operand::RightParenthesis => -1,
-        }
-    }
-
-    pub fn is_parenthesis(&self) -> bool {
-        match *self {
-            Operand::LeftParenthesis | Operand::RightParenthesis => true,
-            _ => false,
-        }
-    }
-}
-
-#[allow(unused_imports)]
-use Operand::*;
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Fraction {
-    pub numerator: i64,
-    pub denominator: i64,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Variable {
-    pub symbol: char,
-    pub power: f64,
-    pub coefficient: f64,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Expression {
-    pub values: Vec<Types>,
-    pub operation: Operand,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum Types {
-    Float(f64),
-    Fraction(Fraction),
-    Variable(Variable),
-    Expression(Expression),
-}
-use Types::*;
 
 pub trait Operations {
     // all of these methods want self, and another number, Fraction or var, and will return either Ok(T), where t is
@@ -308,7 +245,17 @@ impl Operations for f64 {
 
     fn divide(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
-            Float(value) => Ok(Float(num1 / value)),
+            Float(value) =>
+            if (num1 / value).fract() == 0 { // if dividing gives an int
+                Ok(Float(num1 / value))
+            } else if num1.fract() == 0 && value.fract() == 0 { //convert to fraction if possible
+                Ok(Fraction(Fraction {
+                    numerator: num1 as i64,
+                    denominator: value as i64 , 
+                 })
+            } else {
+                Ok(Float(num1 / value))
+            },
             Fraction(value) => Ok(Float(num1 / value.to_float())),
             Variable(value) => Ok(Expression(Expression {
                 operation: Operand::Divide,
