@@ -3,24 +3,42 @@ use crate::evaluator::numbers::*;
 pub fn interpret(input: String) -> Vec<ExpressionComponents>{
     let mut output_vec: Vec<ExpressionComponents> = vec![];
 
-    let mut peekable = input.chars().peekable();
-    //make input iterable by char.
-    for char in peekable.clone() {
-        if char.is_digit(10) {
-            //buffer used to store single number
-            let buffer = "";
+    let mut chars = input.chars();
 
-            while peekable.peek().unwrap().is_digit(10) || *peekable.peek().unwrap() == '.' { //loop through to get full number
-                let buffer = format!("{}{}", buffer, peekable.next().unwrap());
+    //buffer used to store single number
+    let mut buffer = "".to_string();
+
+    let mut peek = chars.clone().next().unwrap(); // peek at the next value
+
+    //make input iterable by char.
+    while let Some(char) = chars.next() {
+        println!("CHAR IS {}", char);
+
+        if char.is_digit(10) {
+
+            buffer = char.to_string(); // puts the current char onto the buffer
+            while peek.is_digit(10) || peek == '.' { //loop through to get full number
+                buffer = format!("{}{}", buffer, chars.next().unwrap());
+
+                peek = match chars.clone().next() {
+                    Some(num) => num,
+                    None => break,
+                };//peek at next value
+                println!("BEFORE: {} and {:?}", buffer, chars.clone().next());
             }
+
+            println!("AFTER: {}", buffer);
 
             match buffer.parse::<f64>() { //push the current number with all digits to the vector
-                Ok(num) => output_vec.push(Type(Float(num))),
-                Err(_) => panic!("Failed to parse buffer")//TODO error handling as well
+                Ok(num) => {
+                    output_vec.push(Type(Float(num)));
+                    buffer.clear();
+                },
+                Err(_) => panic!("Failed to parse buffer: *{}* ", buffer)//TODO error handling as well
             }
 
 
-            if peekable.peek().unwrap().is_alphabetic() || *peekable.peek().unwrap() == '(' { // if the next char is a var or (, insert a multiplication in between
+            if peek.is_alphabetic() || peek == '(' { // if the next char is a var or (, insert a multiplication in between
                 output_vec.push(wrap_buffer('*'));
             }
 
@@ -30,10 +48,17 @@ pub fn interpret(input: String) -> Vec<ExpressionComponents>{
         } else if is_operation(char) {
             output_vec.push(wrap_buffer(char));
 
+        } else if char.is_whitespace() {
+            // ignore
         } else {
             panic!("Invalid char, must be a num, variable, or operation");
 
         }
+
+        peek = match chars.clone().next() {
+            Some(num) => num,
+            None => break,
+        };//peek at next value
     }
 
     output_vec
