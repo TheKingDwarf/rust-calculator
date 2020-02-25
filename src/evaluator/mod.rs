@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 
-mod operations;
-mod numbers;
+pub mod operations;
+pub mod numbers;
 
 use self::numbers::*;
 use self::operations::*;

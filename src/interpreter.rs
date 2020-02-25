@@ -3,14 +3,15 @@ use crate::evaluator::numbers::*;
 pub fn interpret(input: String) -> Vec<ExpressionComponents>{
     let mut output_vec: Vec<ExpressionComponents> = vec![];
 
+    let mut peekable = input.chars().peekable();
     //make input iterable by char.
-    for char in input.iter().peekable() {
-        if char.is_digit() {
+    for char in peekable.clone() {
+        if char.is_digit(10) {
             //buffer used to store single number
-            let mut buffer = "";
+            let buffer = "";
 
-            while (*input.peek().is_digit() || *input.peek() == ".") { //loop through to get full number
-                buffer = format!("{}{}", buffer, input.next());
+            while peekable.peek().unwrap().is_digit(10) || *peekable.peek().unwrap() == '.' { //loop through to get full number
+                let buffer = format!("{}{}", buffer, peekable.next().unwrap());
             }
 
             match buffer.parse::<f64>() { //push the current number with all digits to the vector
@@ -19,15 +20,15 @@ pub fn interpret(input: String) -> Vec<ExpressionComponents>{
             }
 
 
-            if *input.peek().is_alphabetic() || *input.peek() == "(" { // if the next char is a var or (, insert a multiplication in between
-                output_vec.push("*".wrap_buffer());
+            if peekable.peek().unwrap().is_alphabetic() || *peekable.peek().unwrap() == '(' { // if the next char is a var or (, insert a multiplication in between
+                output_vec.push(wrap_buffer('*'));
             }
 
         } else if char.is_alphabetic() {
-            output_vec.push(Type(Variable(Variable { symbol: char, coefficient: 1, power: 1})));
+            output_vec.push(Type(Variable(Variable { symbol: char, coefficient: 1.0, power: 1.0})));
 
-        } else if char.is_operation() {
-            output_vec.push(char.wrap_buffer());
+        } else if is_operation(char) {
+            output_vec.push(wrap_buffer(char));
 
         } else {
             panic!("Invalid char, must be a num, variable, or operation");
@@ -38,26 +39,26 @@ pub fn interpret(input: String) -> Vec<ExpressionComponents>{
     output_vec
 }//end of interpret
 
-impl String {
-    pub fn is_operation(&self) -> bool {
-        match self {
-            "*" || "+" || "/" || "^" ||
-            "-" || "(" || ")" => true,
-            _ => false,
-        }
+pub fn is_operation(s: char) -> bool {
+    match s {
+        '*' | '+' | '/' | '^' |
+        '-' | '(' | ')' => true,
+        _ => false,
     }
-    pub fn wrap_buffer(&self) -> ExpressionComponents {
-        match self {
-            "*" => Op(Multiply) ,
-            "+" => Op(Add),
-            "/" => Op(Divide),
-            "^" => Op(Exponent),
-            "-" => Op(Subtract),
-            "(" => Op(LeftParenthesis),
-            ")" => Op(RightParenthesis),
-        }
-    }// end of wrap_buffer
 }
+
+pub fn wrap_buffer(s: char) -> ExpressionComponents {
+    match s {
+        '*' => Op(Multiply) ,
+        '+' => Op(Add),
+        '/' => Op(Divide),
+        '^' => Op(Exponent),
+        '-' => Op(Subtract),
+        '(' => Op(LeftParenthesis),
+        ')' => Op(RightParenthesis),
+        _   => panic!(),
+    }
+}// end of wrap_buffer
 
 
 #[cfg(test)]
@@ -71,7 +72,7 @@ mod tests {
 
         let out_vec = interpret(input);
 
-        let cmp_vec: Vec<ExpressionComponents> = vec![Type(Float(28)), Op(Multiply), Type(Float(32.021))];
+        let cmp_vec: Vec<ExpressionComponents> = vec![Type(Float(28.0)), Op(Multiply), Type(Float(32.021))];
 
         assert_eq!(out_vec, cmp_vec);
 
@@ -85,9 +86,9 @@ mod tests {
         let out_vec = interpret(input);
 
         let cmp_vec: Vec<ExpressionComponents> =
-        vec![Type(Float(24)), Op(Multiply),
-        Type(Variable( Variable { symbol: 'x', coefficient: 1, power: 1})),
-        Op(LeftParenthesis), Type(Float(32.03)), Op(Add), Type(Float(12)), Op(RightParenthesis))];
+        vec![Type(Float(24.0)), Op(Multiply),
+        Type(Variable( Variable { symbol: 'x', coefficient: 1.0, power: 1.0})),
+        Op(LeftParenthesis), Type(Float(32.03)), Op(Add), Type(Float(12.0)), Op(RightParenthesis)];
 
 
         assert_eq!(out_vec, cmp_vec);
@@ -100,7 +101,7 @@ mod tests {
 
         let out_vec = interpret(input);
 
-        let cmp_vec: Vec<ExpressionComponents> = vec![Type(Float(28)), Op(Multiply), Type(Variable( Variable { symbol: 'x', coefficient: 1, power: 1})), Op(Divide), Type(Float(32.021))];
+        let cmp_vec: Vec<ExpressionComponents> = vec![Type(Float(28.0)), Op(Multiply), Type(Variable( Variable { symbol: 'x', coefficient: 1.0, power: 1.0})), Op(Divide), Type(Float(32.021))];
 
         assert_eq!(out_vec, cmp_vec);
 
@@ -108,8 +109,4 @@ mod tests {
 // is the program compiling with the enums being moved? or are my use statements not correct
 //It is giving import errors from mod.rs
     }
-
 }
-
-
-/*
