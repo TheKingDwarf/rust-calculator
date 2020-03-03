@@ -30,17 +30,16 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
     while !stack.is_empty() {
         let curr_val = stack.pop().unwrap();
-
+        println!("RP: {:?}", curr_val);
         match curr_val {
             Type(t) => nums.push(t),
-            Op(LeftParenthesis) => ops.push(LeftParenthesis),
-            Op(RightParenthesis) => {
-                while ops.last().unwrap().clone() != LeftParenthesis {
+            Op(LeftParenthesis) => {
+                while ops.last().unwrap().clone() != RightParenthesis {
                     pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
                 }
                 ops.pop(); //get rid of Left paranthesis
             },
-
+            Op(RightParenthesis) => ops.push(RightParenthesis),
             Op(operator) => {
                 if !ops.is_empty() {
                     while !ops.is_empty() {
@@ -221,16 +220,13 @@ mod tests {
         }))], evaluate_stack(&mut stack));
     }
 
-    //OOO = order of operations
     #[test]
-    fn float_OOO(){
+    fn float_order_of_operations(){
         let mut stack = vec![
         Op(LeftParenthesis),
         Type(Float(1.0)), Op(Add), Type(Float(5.0)),
         Op(RightParenthesis),
         Op(Multiply), Type(Float(3.0))];
-
-        stack.reverse();
 
         let answer = evaluate_stack(&mut stack);
         println!("answer: {:?}", &answer);
@@ -240,7 +236,7 @@ mod tests {
 
     #[test]
     fn variable_add_float(){
-        let mut stack = vec![
+        let stack = vec![
             Type(Variable(Variable {
                 symbol: 'x',
                 power: 1.0,
@@ -288,13 +284,14 @@ mod tests {
     }
 
     #[test]
-    fn variable_division_OOO(){
+    fn variable_division_order_of_operations(){
         let mut stack = vec![Type(Variable(Variable{
             symbol: 'x',
             power: 1.0,
             coefficient: 9.0,
         })),
-        Op(Divide), Op(LeftParenthesis),
+        Op(Divide),
+        Op(LeftParenthesis),
         Type(Float(3.0)), Op(Multiply), Type(Float(2.0)), Op(Add), Type(Float(3.0)),
         Op(RightParenthesis)];
 
@@ -309,5 +306,9 @@ mod tests {
         assert_eq!(answer, cmp_answer);
 
     }
+    /*
+    fn divide_float_by_variable(){
+        let mut stack = vec![Type(variable)]
+    }*/
 
 }

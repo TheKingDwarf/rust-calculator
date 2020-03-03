@@ -12,10 +12,7 @@ pub fn interpret(input: String) -> Vec<ExpressionComponents>{
 
     //make input iterable by char.
     while let Some(char) = chars.next() {
-        println!("CHAR IS {}", char);
-
         if char.is_digit(10) {
-
             buffer = char.to_string(); // puts the current char onto the buffer
             while peek.is_digit(10) || peek == '.' { //loop through to get full number
                 buffer = format!("{}{}", buffer, chars.next().unwrap());
@@ -24,10 +21,7 @@ pub fn interpret(input: String) -> Vec<ExpressionComponents>{
                     Some(num) => num,
                     None => break,
                 };//peek at next value
-                println!("BEFORE: {} and {:?}", buffer, chars.clone().next());
             }
-
-            println!("AFTER: {}", buffer);
 
             match buffer.parse::<f64>() { //push the current number with all digits to the vector
                 Ok(num) => {
@@ -113,10 +107,11 @@ mod tests {
         let cmp_vec: Vec<ExpressionComponents> =
         vec![Type(Float(24.0)), Op(Multiply),
         Type(Variable( Variable { symbol: 'x', coefficient: 1.0, power: 1.0})),
+        Op(Multiply),
         Op(LeftParenthesis), Type(Float(32.03)), Op(Add), Type(Float(12.0)), Op(RightParenthesis)];
 
 
-        assert_eq!(out_vec, cmp_vec);
+        assert_eq!(cmp_vec, out_vec);
 
     }
 
@@ -128,7 +123,7 @@ mod tests {
 
         let cmp_vec: Vec<ExpressionComponents> = vec![Type(Float(28.0)), Op(Multiply), Type(Variable( Variable { symbol: 'x', coefficient: 1.0, power: 1.0})), Op(Divide), Type(Float(32.021))];
 
-        assert_eq!(out_vec, cmp_vec);
+        assert_eq!(cmp_vec, out_vec);
 
 //more tests? are these passing?
 // is the program compiling with the enums being moved? or are my use statements not correct
