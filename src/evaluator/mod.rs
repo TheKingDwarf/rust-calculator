@@ -30,7 +30,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
     while !stack.is_empty() {
         let curr_val = stack.pop().unwrap();
-        println!("RP: {:?}", curr_val);
+
         match curr_val {
             Type(t) => nums.push(t),
             Op(LeftParenthesis) => {
@@ -80,6 +80,8 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
 // simply abstracted this behaviour to a function since its called multiple times above
  fn pop_expression(nums: &mut Vec<Types>, ops: &mut Vec<Operand>, inoperable_expression: &mut Vec<ExpressionComponents>) {
+     println!("\nOps Stack: {:?}", ops);
+     println!("Types Stack: {:?}\n", nums);
      //println!("Nums: {:?}, Ops: {:?}", &nums, &ops);
      let exp = Expression {
          values: vec![nums.pop().unwrap(), nums.pop().unwrap()],
@@ -153,6 +155,7 @@ pub fn evaluate_expression(expression: Expression) -> Types {
         its because each one of the types inside an enum is different,
         so each case must be written out explicitly :(
     */
+
     let returned = match expression.values[0].clone() {
         Float(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
         Fraction(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
@@ -292,13 +295,13 @@ mod tests {
         })),
         Op(Divide),
         Op(LeftParenthesis),
-        Type(Float(3.0)), Op(Multiply), Type(Float(2.0)), Op(Add), Type(Float(3.0)),
+        Type(Float(3.0)), Op(Multiply), Type(Float(2.0)), Op(Subtract), Type(Float(3.0)),
         Op(RightParenthesis)];
 
         let cmp_answer = vec![Type(Variable(Variable{
             symbol: 'x',
             power: 1.0,
-            coefficient: 1.0,
+            coefficient: 3.0,
         }))];
 
         let answer = evaluate_stack(&mut stack);
@@ -306,9 +309,26 @@ mod tests {
         assert_eq!(answer, cmp_answer);
 
     }
-    /*
+
+    #[test]
     fn divide_float_by_variable(){
-        let mut stack = vec![Type(variable)]
-    }*/
+        let mut stack = vec![Type(Float(2.5)),
+        Op(Divide),
+        Type(Variable(Variable{
+            symbol: 'z',
+            power: 1.0,
+            coefficient: 5.0
+        }))];
+
+        let cmp_answer = vec![Type(Variable(Variable{
+            symbol: 'z',
+            power: -1.0,
+            coefficient: 0.5
+        }))];
+
+        assert_eq!(cmp_answer, evaluate_stack(&mut stack));
+    }
+
+
 
 }

@@ -79,7 +79,7 @@ impl Operations for Fraction {
             })),
             Variable(value) => Ok(Variable(Variable {
                 symbol: value.symbol,
-                power: value.power * -1 as f64,
+                power: value.power * -1.0,
                 coefficient: num1.to_float() / value.coefficient,
             })),
             Expression(_) => Err(()),
@@ -180,7 +180,7 @@ impl Operations for Variable {
             })),
             Variable(value) => if value.symbol == num1.symbol {
                 if num1.power - value.power == 0.0 { //handle case where power is 0
-                    return Ok(Float(value.coefficient * num1.coefficient));
+                    return Ok(Float(num1.coefficient / value.coefficient));
                 }
                 Ok(Variable(Variable {
                     symbol: value.symbol,
@@ -258,10 +258,11 @@ impl Operations for f64 {
                 }
             },
             Fraction(value) => Ok(Float(num1 / value.to_float())),
-            Variable(value) => Ok(Expression(Expression {
-                operation: Operand::Divide,
-                values: vec![Float(num1), Variable(value)],
-            })),
+            Variable(value) => Ok(Variable(Variable{
+                    symbol: value.symbol,
+                    power: -1.0 * value.power,
+                    coefficient: num1 / value.coefficient
+                })),
             Expression(_) => Err(()),
         }
     }

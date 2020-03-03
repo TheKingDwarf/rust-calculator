@@ -15,6 +15,7 @@ pub fn interpret(input: String) -> Vec<ExpressionComponents>{
         if char.is_digit(10) {
             buffer = char.to_string(); // puts the current char onto the buffer
             while peek.is_digit(10) || peek == '.' { //loop through to get full number
+                //todo negative numbers in interpreter. Currently broken
                 buffer = format!("{}{}", buffer, chars.next().unwrap());
 
                 peek = match chars.clone().next() {
@@ -38,6 +39,11 @@ pub fn interpret(input: String) -> Vec<ExpressionComponents>{
 
         } else if char.is_alphabetic() {
             output_vec.push(Type(Variable(Variable { symbol: char, coefficient: 1.0, power: 1.0})));
+
+        } else if char == '/' {
+            output_vec.insert(0, Op(LeftParenthesis));  // "Onion" algorithm. adds layers of parenthesis
+            output_vec.push(Op(RightParenthesis));      // until the order of operations checks out
+            output_vec.push(wrap_buffer(char));
 
         } else if is_operation(char) {
             output_vec.push(wrap_buffer(char));
@@ -125,8 +131,20 @@ mod tests {
 
         assert_eq!(cmp_vec, out_vec);
 
-//more tests? are these passing?
-// is the program compiling with the enums being moved? or are my use statements not correct
-//It is giving import errors from mod.rs
+    }
+
+    #[test]
+    fn divide_fractions_with_variables(){
+        let input = String::from("3.0 / z^75 / 2.0 / z^2.0");
+
+        let out_vec = interpret(input);
+
+        let cmp_vec: Vec<ExpressionComponents> = vec![Type(Variable(Variable {
+            power: -77.0,
+            coefficient: 1.5,
+            symbol: 'z'
+        }))];
+
+        assert_eq!(cmp_vec, out_vec);
     }
 }
