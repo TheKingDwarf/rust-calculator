@@ -135,13 +135,13 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
         _ => (),// do nothing
      };
 
-     match exp.values[1] {
+     /*match exp.values[1] {
          Expression(_) => { //put back on stack
              // im pretty positive this is actually an error case, ~Logan
              panic!("Why was an expression at exp.values.1? mod.rs line 127");
          }
         _ => (),// do nothing
-     };
+    };*/
 
      let returned = evaluate_expression(exp);
 
@@ -176,6 +176,7 @@ fn get_operation<T: Operations>(values: (T, Types), op: Operand) -> Result<Types
         Divide => Operations::divide(values.0, values.1),
         Subtract => Operations::sub(values.0, values.1),
         Add => Operations::add(values.0, values.1),
+        Exponent => Operations::exponentiate(values.0, values.1),
         _ => Err(()),
     }
 }
@@ -327,6 +328,85 @@ mod tests {
         }))];
 
         assert_eq!(cmp_answer, evaluate_stack(&mut stack));
+    }
+
+    #[test]
+    fn exponentiate_floats() {
+
+        let mut stack = vec![Type(Float(3.0)), Op(Exponent), Type(Float(3.0)),
+        Op(Add), Type(Float(9.0)), Op(Exponent), Type(Variable(Variable {
+            symbol: 'x',
+            power: 1.0,
+            coefficient: 1.0,
+        }))];
+
+        let cmp_answer = vec![Type(Float(27.0)), Op(Add),
+        Type(Expression(Expression {
+            values: vec![Float(9.0), Variable(Variable {
+                symbol: 'x',
+                power: 1.0,
+                coefficient: 1.0 })],
+            operation: Exponent })
+        )];
+
+        assert_eq!(cmp_answer, evaluate_stack(&mut stack));
+
+    }
+
+    #[test] fn exponentiate_variables() {
+
+        let mut stack = vec![Type(Variable(Variable {
+            symbol: 'x',
+            power: 1.0,
+            coefficient: 1.0,
+        })), Op(Exponent), Type(Float(3.0))];
+
+
+        let cmp_answer = vec![Type(Variable(Variable {
+            symbol: 'x',
+            power: 3.0,
+            coefficient: 1.0,
+        }))];
+
+        assert_eq!(cmp_answer, evaluate_stack(&mut stack));
+
+    }
+
+    #[test]
+    fn exponentiate_fraction() {
+        let mut stack = vec![Type(Fraction(Fraction {
+            numerator: 2,
+            denominator: 3,
+        })),
+        Op(Exponent), Type(Float(3.0))];
+
+        let cmp_answer = vec![Type(Fraction(Fraction {
+            numerator: 8,
+            denominator: 27,
+        }))];
+
+        assert_eq!(cmp_answer, evaluate_stack(&mut stack));
+
+    }
+
+    #[test]
+    fn fractional_exponents() {
+
+        let mut stack = vec![Type(Fraction(Fraction {
+            numerator: 169,
+            denominator: 144,
+        })), Op(Exponent),
+        Type(Fraction(Fraction {
+            numerator: 1,
+            denominator: 2,
+        }))];
+
+        let cmp_answer = vec![Type(Fraction(Fraction {
+            numerator: 13,
+            denominator: 12,
+        }))];
+
+        assert_eq![cmp_answer, evaluate_stack(&mut stack)];
     }
 
 

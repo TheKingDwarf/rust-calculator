@@ -147,4 +147,5 @@ mod tests {
 
         assert_eq!(cmp_vec, out_vec);
     }
+
 }

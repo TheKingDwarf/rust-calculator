@@ -6,6 +6,9 @@
 */
 use super::numbers::*;
 
+//sqrt function
+use num_integer::Roots;
+
 use std::cmp::Ordering;
 
 pub trait Operations {
@@ -21,9 +24,13 @@ pub trait Operations {
 
     // Literally just changes the sign
     fn negative(num1: Self) -> Self;
+
+    fn exponentiate(num1: Self, num2: Types) -> Result<Types, ()>;
+
 }
 
 impl Operations for Fraction {
+
     fn add(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
             Float(value) => Ok(Float(value + (num1.numerator/num1.denominator) as f64)),
@@ -92,9 +99,47 @@ impl Operations for Fraction {
             denominator: num1.denominator,
         }
     }
+
+    fn exponentiate(num1: Self, num2: Types) -> Result<Types, ()> {
+        match num2 {
+            Float(value) => if value % 1.0 == 0.0 && value > 0.0 {
+                Ok(Fraction(Fraction {
+                    //if our value is greater than 0 and has no fractional component, it should be relatively safe to convert to u32 here. Using checked_pow due to
+                    numerator: num1.numerator.checked_pow(value as u32).unwrap(),
+                    denominator: num1.denominator.checked_pow(value as u32).unwrap(),
+                }))
+            } else {
+                Ok(Expression(Expression {
+                    values: vec![Fraction(num1), Float(value)],
+                    operation: Operand::Exponent,
+                }))
+            }, //cloning the Types variant here because a reference would have to be explicit to each type, so the function would need four overloads
+            Fraction(value) => if value.numerator > 0 && Fraction::exponentiates_evenly(&value, Fraction(num1.clone())) {
+                Ok(Fraction(Fraction {
+                    numerator: num1.numerator.pow(value.numerator as u32).nth_root(value.denominator as u32),
+                    denominator: num1.denominator.pow(value.numerator as u32).nth_root(value.denominator as u32),
+                }))
+            } else {
+                Ok(Expression(Expression {
+                    values: vec![Fraction(num1), Fraction(value)],
+                    operation: Operand::Exponent,
+                }))
+            },
+            Variable(value) => Ok(Expression(Expression {
+                operation: Operand::Exponent,
+                values: vec![Fraction(num1), Variable(value)],
+            })),
+            Expression(value) => Ok(Expression(Expression {
+                values: vec![Fraction(num1), Expression(value)],
+                operation: Operand::Exponent,
+            })),
+        }
+
+    }
 }
 
 impl Operations for Variable {
+
     fn add(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
             Float(_) => Err(()),
@@ -204,9 +249,64 @@ impl Operations for Variable {
             symbol: num1.symbol,
         }
     }
+
+    fn exponentiate(num1: Self, num2: Types) -> Result<Types, ()> {
+        match num2 {
+            Float(value) => Ok(Variable(Variable {
+                symbol: num1.symbol,
+                power: num1.power * value,
+                coefficient: num1.coefficient,
+            })),
+            //just leaving as an expression for now but would be simpler to make the power attribute of the Variable struct a Types variant and leave as a fraction to return a Variable -oisin
+            Fraction(value) => Ok(Expression(Expression {
+                operation: Operand::Exponent,
+                values: vec![Variable(num1), Fraction(value)],
+            })),
+            Variable(value) => Ok(Expression(Expression {
+                operation: Operand::Exponent,
+                values: vec![Variable(num1), Variable(value)],
+            })),
+            Expression(value) => Ok(Expression(Expression {
+                operation: Operand::Exponent,
+                values: vec![Variable(num1), Expression(value)],
+            })),
+
+        }
+    }
 }
 
 impl Operations for f64 {
+
+    fn exponentiate(num1: Self, num2: Types) -> Result<Types, ()> {
+        match num2 {
+            Float(value) => if value > 0.0 && value % 1.0 == 0.0 { //ensure positive and nothing after the decimal point
+                Ok(Float(num1.powf(value)))
+            } else {
+                Ok(Expression(Expression {
+                    operation: Operand::Exponent,
+                    values: vec![Float(num1), num2],
+                }))
+            },
+            Fraction(value) => if value.numerator > 0 && Fraction::exponentiates_evenly(&value, Float(num1.clone())) && num1 % 1.0 == 0.0 { //checking here if the float evaluates evenly with a fractiional exponent, if it does converting to i64 to comply with nth_root function
+                //nth_root requires integer value, checked for fractional component above
+                Ok(Float((num1 as i32).pow(value.numerator as u32).nth_root(value.denominator as u32) as f64)) //FIXME: conversion to int and back required for nth_root compliance with Float(f64)
+            } else {
+                Ok(Expression(Expression {
+                    operation: Operand::Exponent,
+                    values: vec![Float(num1), Fraction(value)],
+                }))
+            },
+            Variable(value) => Ok(Expression(Expression {
+                operation: Operand::Exponent,
+                values: vec![Float(num1), Variable(value)],
+            })),
+            Expression(value) => Ok(Expression(Expression {
+                operation: Operand::Exponent,
+                values: vec![Float(num1), Expression(value)],
+            })),
+        }
+    }
+
     fn add(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
             Float(value) => Ok(Float(num1 + value)),
@@ -273,6 +373,12 @@ impl Operations for f64 {
 }
 
 impl Operations for Expression {
+
+    #[allow(unused_variables)]
+    fn exponentiate(num1: Self, num2: Types) -> Result<Types, ()> {
+        Err(())
+    }
+
     #[allow(unused_variables)]
     fn add(num1: Self, num2: Types) -> Result<Types, ()> {
         Err(())
@@ -309,6 +415,28 @@ impl Fraction {
             numerator: self.numerator / gcd,
             denominator: self.denominator / gcd
         }
+    }
+
+    //checks if a fraction exponentiates a number without a fractional component in the return type
+    fn exponentiates_evenly(fraction: &Fraction, other: Types) -> bool {
+
+        match other {
+            Float(value) => if (value.powf(fraction.numerator as f64) % 1.0 == 0.0) && (value.powf(fraction.denominator as f64) % 1.0 == 0.0) {
+                true
+            } else {
+                false
+            },
+            Fraction(value) => if value.numerator.pow(fraction.numerator as u32).nth_root(fraction.denominator as u32) %1 == 0 && value.denominator.pow(fraction.numerator as u32).nth_root(fraction.denominator as u32) % 1 == 0 {
+                true
+            } else {
+                false
+            },
+            Variable(_value) => false,
+            Expression(_value) => false,
+
+
+        }
+
     }
 }
 
@@ -538,4 +666,6 @@ mod tests {
 
         assert_eq!(value, 10);
     }
+
+
 }
