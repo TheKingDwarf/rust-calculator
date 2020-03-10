@@ -400,7 +400,7 @@ mod tests {
             numerator: 1,
             denominator: 2,
         }))];
-
+        
         let cmp_answer = vec![Type(Fraction(Fraction {
             numerator: 13,
             denominator: 12,

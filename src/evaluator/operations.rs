@@ -94,22 +94,22 @@ impl Operations for Fraction {
 
     fn exponentiate(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
-            Float(value) => if value.fract() == 0.0 && value > 0.0 { // if power is not a fraction, and greater than 0
+            Float(value) => if value > 0.0 { // if power is not a fraction, and greater than 0
                 Ok(Fraction(Fraction {
-                    //if our value is greater than 0 and has no fractional component, it should be relatively safe to convert to u32 here. Using checked_pow due to
-                    numerator: num1.numerator.checked_pow(value as u32).unwrap(),
-                    denominator: num1.denominator.checked_pow(value as u32).unwrap(),
+                    numerator: (num1.numerator as f64).powf(value) as i64,
+                    denominator: (num1.denominator as f64).powf(value) as i64,
                 }))
             } else {
-                Ok(Expression(Expression {
-                    values: vec![Fraction(num1), Float(value)],
-                    operation: Operand::Exponent,
+                Ok(Fraction(Fraction {
+                    numerator: (num1.denominator as f64).powf(value) as i64,
+                    denominator: (num1.numerator as f64).powf(value) as i64,
                 }))
             }, //cloning the Types variant here because a reference would have to be explicit to each type, so the function would need four overloads
-            Fraction(value) => if value.numerator > 0 && Fraction::exponentiates_evenly(&value, Fraction(num1.clone())) {
+            Fraction(value) => if value.numerator > 0 && Fraction::exponentiates_to_integer(&num1, Fraction(value.clone())) {
+                let float_value = value.clone().to_float();
                 Ok(Fraction(Fraction {
-                    numerator: num1.numerator.pow(value.numerator as u32).nth_root(value.denominator as u32),
-                    denominator: num1.denominator.pow(value.numerator as u32).nth_root(value.denominator as u32),
+                    numerator: (num1.numerator as f64).powf(float_value) as i64,
+                    denominator: (num1.denominator as f64).powf(float_value) as i64,
                 }))
             } else {
                 Ok(Expression(Expression {
@@ -245,13 +245,14 @@ impl Operations for Variable {
                     Ok(Variable(Variable {
                         symbol: num1.symbol,
                         power: num1.power * value,
-                        coefficient: num1.coefficient,
+                        coefficient: num1.coefficient.powf(value),
                     }))
                 } else {
                     Ok(Float(num1.coefficient))
                 }
             },
-            //just leaving as an expression for now but would be simpler to make the power attribute of the Variable struct a Types variant and leave as a fraction to return a Variable -oisin
+            //TODO just leaving as an expression for now but would be simpler to make the power attribute
+            //of the Variable struct a Types variant and leave as a fraction to return a Variable -oisin
             Fraction(value) => Ok(Expression(Expression {
                 operation: Operand::Exponent,
                 values: vec![Variable(num1), Fraction(value)],
@@ -276,10 +277,9 @@ impl Operations for f64 {
                     values: vec![Float(num1), num2],
                 }))
             },
-            Fraction(value) => if value.numerator > 0 && Fraction::exponentiates_evenly(&value, Float(num1.clone())) //checking here if the float evaluates evenly with a fractiional exponent, if it does converting to i64 to comply with nth_root function
+            Fraction(value) => if value.numerator > 0 && Fraction::exponentiates_to_integer(&value, Float(num1.clone())) //checking here if the float evaluates evenly with a fractiional exponent, if it does converting to i64 to comply with nth_root function
                                && num1.fract() == 0.0 {
-                //nth_root requires integer value, checked for fractional component above
-                Ok(Float((num1 as i32).pow(value.numerator as u32).nth_root(value.denominator as u32) as f64)) //FIXME: conversion to int and back required for nth_root compliance with Float(f64)
+                Ok(Float((num1).powf(value.to_float())))
             } else {
                 Ok(Expression(Expression {
                     operation: Operand::Exponent,
@@ -405,7 +405,7 @@ impl Fraction {
     }
 
     //checks if a fraction exponentiates a number without a fractional component in the return type
-    fn exponentiates_evenly(fraction: &Fraction, other: Types) -> bool {
+    fn exponentiates_to_integer(fraction: &Fraction, other: Types) -> bool {
         match other {
             Float(value) => if (value.powf(fraction.numerator as f64).fract() == 0.0)
                             && (value.powf(fraction.denominator as f64).fract() == 0.0) {
@@ -413,11 +413,18 @@ impl Fraction {
             } else {
                 false
             },
-            Fraction(value) => if value.numerator.pow(fraction.numerator as u32).nth_root(fraction.denominator as u32) % 1 == 0 // TODO:
-                               && value.denominator.pow(fraction.numerator as u32).nth_root(fraction.denominator as u32) % 1== 0 {
-                true
-            } else {
-                false
+            Fraction(value) => {
+                let float_value = value.clone().to_float();
+                println!("Float_value: {}, numerator: {}, denominator: {}",
+                float_value, (fraction.numerator as f64).powf(float_value),
+                (fraction.denominator as f64).powf(float_value));
+
+                if (fraction.numerator as f64).powf(float_value).fract() == 0.0 // TODO:
+                && (fraction.denominator as f64).powf(float_value).fract() == 0.0 {
+                    true
+                } else {
+                    false
+                }
             },
             Variable(_value) => false,
             Expression(_value) => false,
@@ -601,6 +608,23 @@ mod tests {
         })));
     }
 
+    #[test]
+    fn cube_variable_w_coefficient(){
+        let var = Variable{
+            symbol: 'y',
+            power: 2.0,
+            coefficient: 3.0,
+        };
+
+        let value = Variable::exponentiate(var, Float(3.0));
+
+        assert_eq!(Ok(Variable(Variable{
+            symbol: 'y',
+            power: 6.0,
+            coefficient: 27.0,
+        })), value);
+    }
+
     /* Variable Tests End */
 
     /* Fraction Tests Start */
@@ -639,6 +663,21 @@ mod tests {
             numerator: 1,
             denominator: 3
         });
+    }
+
+    #[test]
+    fn square_fraction(){
+        let frac = Fraction {
+            numerator: 3,
+            denominator:4
+        };
+
+        let value = Fraction::exponentiate(frac, Float(2.0));
+
+        assert_eq!(Ok(Fraction(Fraction{
+            numerator: 9,
+            denominator: 16
+        })), value);
     }
 
     /* Fraction Tests End */
