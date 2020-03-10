@@ -127,7 +127,12 @@ mod tests {
 
         let out_vec = interpret(input);
 
-        let cmp_vec: Vec<ExpressionComponents> = vec![Type(Float(28.0)), Op(Multiply), Type(Variable( Variable { symbol: 'x', coefficient: 1.0, power: 1.0})), Op(Divide), Type(Float(32.021))];
+        let cmp_vec: Vec<ExpressionComponents> = vec![
+        Op(LeftParenthesis), Type(Float(28.0)),
+        Op(Multiply), Type(Variable(Variable { symbol: 'x', power: 1.0, coefficient: 1.0 })),
+        Op(RightParenthesis),
+        Op(Divide),
+        Type(Float(32.021))];
 
         assert_eq!(cmp_vec, out_vec);
 
@@ -139,12 +144,26 @@ mod tests {
 
         let out_vec = interpret(input);
 
-        let cmp_vec: Vec<ExpressionComponents> = vec![Type(Variable(Variable {
-            power: -77.0,
-            coefficient: 1.5,
-            symbol: 'z'
-        }))];
+        let cmp_vec: Vec<ExpressionComponents> = vec![
+        Op(LeftParenthesis),
+        Op(LeftParenthesis),
+        Op(LeftParenthesis),
+        Type(Float(3.0)),
+        Op(RightParenthesis),
+        Op(Divide),
+        Type(Variable(Variable { symbol: 'z', power: 1.0, coefficient: 1.0 })),
+        Op(Exponent),
+        Type(Float(75.0)),
+        Op(RightParenthesis),
+        Op(Divide),
+        Type(Float(2.0)),
+        Op(RightParenthesis),
+        Op(Divide),
+        Type(Variable(Variable { symbol: 'z', power: 1.0, coefficient: 1.0 })),
+        Op(Exponent),
+        Type(Float(2.0))];
 
         assert_eq!(cmp_vec, out_vec);
     }
+
 }
