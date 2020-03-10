@@ -10,6 +10,10 @@ pub enum Operand {
     RightParenthesis,
 }
 
+pub trait SimpleNumber {
+
+}
+
 impl Operand {
     #[allow(dead_code)]
     pub fn priority(&self) -> i32 {
@@ -41,10 +45,13 @@ pub struct Fraction {
     pub denominator: i64,
 }
 
+impl SimpleNumber for Fraction {}
+impl SimpleNumber for f64 {}
+
 #[derive(Debug, PartialEq, Clone)]
-pub struct Variable {
+pub struct Variable<T: SimpleNumber> {
     pub symbol: char,
-    pub power: f64,
+    pub power: T,
     pub coefficient: f64,
 }
 
