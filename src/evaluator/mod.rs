@@ -6,23 +6,6 @@ pub mod numbers;
 use self::numbers::*;
 use self::operations::*;
 
-#[allow(dead_code)]
-pub fn create_stack(_commands: &str) -> Vec<ExpressionComponents> {
-
-    //create a vector containing enum variants for types and operations
-    //evaluate the vector in the evaluate_stack function by separating
-    //it into operations and types (which the Expression enum is useful for)
-
-    let val1 = Type(Float(11.4));
-    let val2 = Type(Float(19.3));
-    let op = Op(Multiply);
-
-    let eval_vec: Vec<ExpressionComponents> = vec![val1, op, val2];
-    eval_vec
-
-}
-
-#[allow(dead_code)]
 pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionComponents> {
     let mut ops: Vec<Operand> = Vec::new();
     let mut nums: Vec<Types> = Vec::new();
@@ -80,8 +63,8 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
 // simply abstracted this behaviour to a function since its called multiple times above
  fn pop_expression(nums: &mut Vec<Types>, ops: &mut Vec<Operand>, inoperable_expression: &mut Vec<ExpressionComponents>) {
-     println!("\nOps Stack: {:?}", ops);
-     println!("Types Stack: {:?}\n", nums);
+//     println!("\nOps Stack: {:?}", ops);
+//     println!("Types Stack: {:?}\n", nums);
      //println!("Nums: {:?}, Ops: {:?}", &nums, &ops);
      let exp = Expression {
          values: vec![nums.pop().unwrap(), nums.pop().unwrap()],
@@ -400,7 +383,7 @@ mod tests {
             numerator: 1,
             denominator: 2,
         }))];
-        
+
         let cmp_answer = vec![Type(Fraction(Fraction {
             numerator: 13,
             denominator: 12,
