@@ -47,7 +47,10 @@ pub fn format_expression(input: Vec<ExpressionComponents>) -> String {
 
         };
     }
+// actually, do we want to add tests here or to main?
+// here we could just copy the vectors we were using from the interpreter and use them as the input to the above function
 
+// i think the tests should be here, and i think it would be a good idea to create them as you just described
     output
 }
 
@@ -55,6 +58,43 @@ pub fn format_expression(input: Vec<ExpressionComponents>) -> String {
 mod tests {
     use super::*;
 
-    //#[test]
+    #[test]
+    fn formatting_variables() {
+        let in_vec = vec![
+        Type(Variable(Variable{
+            symbol: 'x',
+            power: 3.0,
+            coefficient: 2.55
+        })),
+        Op(Divide),
+        Type(Variable(Variable{
+            symbol: 'y',
+            power: 1.0,
+            coefficient: 5.0
+        }))];
 
+        assert_eq!(format_expression(in_vec), "2.55x^3 / 5y");
+    }
+
+    #[test]
+    fn formatting_expressions() {
+        let in_vec = vec![
+        Type(Expression(Expression {
+            values: vec![Variable(Variable {
+                symbol: 'x',
+                power: 1.0,
+                coefficient: 1.0 }), Float(9.0)],
+            operation: Exponent })
+        ),
+        Op(Multiply),
+        Type(Variable(Variable{
+            symbol: 'x',
+            power: 55.0,
+            coefficient: 1.0
+        }))];
+
+        assert_eq!(format_expression(in_vec),
+            "9^x * x^55"
+        );
+    }
 }
