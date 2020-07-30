@@ -40,17 +40,13 @@ pub fn format_expression(input: Vec<ExpressionComponents>) -> String {
             Op(LeftParenthesis)  => output += "(",
             Op(RightParenthesis) => output += ")",
             Op(Exponent) => output += "^",
-            Op(Multiply) => output += " * ", // lets move to main.rs and implement this there to make sure it works
-            Op(Divide) => output += " / ", // could also be worth adding some tests to io.rs
+            Op(Multiply) => output += " * ", 
+            Op(Divide) => output += " / ", 
             Op(Subtract) => output += " - ",
             Op(Add) => output += " + ",
 
         };
     }
-// actually, do we want to add tests here or to main?
-// here we could just copy the vectors we were using from the interpreter and use them as the input to the above function
-
-// i think the tests should be here, and i think it would be a good idea to create them as you just described
     output
 }
 
