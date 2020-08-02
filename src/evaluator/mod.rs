@@ -12,6 +12,8 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
     let mut inoperable_expression: Vec<ExpressionComponents> = Vec::new();
 
     while !stack.is_empty() {
+        println!("input vec: {:?}", stack);
+
         let curr_val = stack.pop().unwrap();
 
         match curr_val {
@@ -27,7 +29,6 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
                 if !ops.is_empty() {
                     while !ops.is_empty() {
                         let top = ops.last().unwrap().clone(); //non-destructively checks the top member of ops
-
                         if top.priority() < operator.priority() || top.is_parenthesis() {
                             break;
                         }
@@ -39,6 +40,9 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
                 ops.push(operator);
             },
         }
+
+        println!("inoperable vec: {:?}", inoperable_expression);
+    //    println!("nums vec: {:?}", nums);
 
     }
 
@@ -56,6 +60,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
         },
         other => inoperable_expression.push(Type(other)),
     }
+
 
 
     inoperable_expression
@@ -392,6 +397,52 @@ mod tests {
         assert_eq![cmp_answer, evaluate_stack(&mut stack)];
     }
 
+    #[test]
+    fn dividing_vars() {
+        let mut stack = vec![
+        Type(Float(2.0)),
+        Op(Multiply),
+        Type(Variable(Variable {
+            symbol: 'x',
+            power: 3.0,
+            coefficient: 2.0,
+        })),
+        Op(Divide),
+        Type(Variable(Variable {
+            symbol: 'x',
+            power: 1.0,
+            coefficient: 1.8,
+        })),
+        ];
 
+
+        let cmp_answer = vec![Type(Variable(Variable {
+            symbol: 'x',
+            power: 2.0,
+            coefficient: 4.0/1.8,
+        }))];
+
+        assert_eq!(cmp_answer, evaluate_stack(&mut stack));
+    }
+
+    #[test]
+    fn multiplying_coefficients() {
+        let mut stack = vec![
+        Type(Float(2.0)),
+        Op(Multiply),
+        Type(Variable(Variable {
+            symbol: 'x',
+            power: 1.0,
+            coefficient: 2.0,
+        })),];
+
+        let cmp_answer = vec![Type(Variable(Variable {
+            symbol:'x',
+            power: 1.0,
+            coefficient: 4.0
+        }))];
+
+        assert_eq!(cmp_answer, evaluate_stack(&mut stack));
+    }
 
 }

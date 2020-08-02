@@ -1,20 +1,26 @@
 use crate::evaluator::numbers::*;
 
-pub fn interpret(input: String) -> Vec<ExpressionComponents>{
+pub fn interpret(mut input: String) -> Vec<ExpressionComponents>{
     let mut output_vec: Vec<ExpressionComponents> = vec![];
 
+    input.retain(|c| !c.is_whitespace());
     let mut chars = input.chars();
 
     //buffer used to store single number
     let mut buffer = "".to_string();
-    let mut peek = chars.clone().next().unwrap();
+    let mut peek: char = chars.clone().next().unwrap();
 
+    if (peek == '-') {
+        buffer += &chars.next().unwrap().to_string();
+    }
+
+    let mut stored_coefficient = 1.0;
 
     //make input iterable by char.
     while let Some(char) = chars.next() {
         println!("char: {}", char);
         if char.is_digit(10) {
-            buffer  = char.to_string(); // puts the current char onto the buffer
+            buffer  += &char.to_string(); // puts the current char onto the buffer
             peek    = match chars.clone().next() {
                 Some(num) => num,
                 None => '!', //makes sure while loop wont run if there is no char to peek at
@@ -38,31 +44,80 @@ pub fn interpret(input: String) -> Vec<ExpressionComponents>{
 
             match buffer.parse::<f64>() { //push the current number with all digits to the vector
                 Ok(num) => {
-                    output_vec.push(Type(Float(num)));
-                    buffer.clear();
+                    if peek.is_alphabetic() {
+                        stored_coefficient = num;
+                    } else {
+                        output_vec.push(Type(Float(num)));
+                    }
                 },
 
                 Err(_) => panic!("Failed to parse buffer: '{}' ", buffer)//TODO error handling as well
             }
 
 
-            if peek.is_alphabetic() || peek == '(' { // if the next char is a var or (, insert a multiplication in between
+            if peek == '(' { // if the next char is a var or (, insert a multiplication in between
                 output_vec.push(wrap_buffer('*'));
             }
 
-        } else if char.is_alphabetic() {
-            output_vec.push(Type(Variable(Variable { symbol: char, coefficient: 1.0, power: 1.0})));
+            buffer.clear();
 
+        } else if char.is_alphabetic() {
+            match chars.clone().next() {
+                Some('^') => {
+                    let mut peek_chars = chars.clone();
+                    peek_chars.next().unwrap();
+
+                    if peek_chars.clone().next().unwrap() == '-' {
+                        buffer += &peek_chars.next().unwrap().to_string();
+                    }
+
+                    while let Some(char_inner) = peek_chars.next() {
+                        if char_inner.is_digit(10) || char_inner == '.' {
+                            buffer += &char_inner.to_string();
+                        }
+                        else {
+                            break;
+                        }
+                    }
+
+                    match buffer.parse::<f64>() { //push the current number with all digits to the vector
+                        Ok(num) => {
+                            output_vec.push(Type(Variable(Variable { symbol: char, coefficient: stored_coefficient, power: num})));
+                            chars.next(); // take the ^ and nubmer off the string
+                            for n in buffer.chars() {
+                                chars.next();
+                            }
+                        },
+
+                        Err(_) => output_vec.push(Type(Variable(Variable { symbol: char, coefficient: stored_coefficient, power: 1.0}))),
+                    }
+                },
+                _ => {
+                    output_vec.push(Type(Variable(Variable { symbol: char, coefficient: stored_coefficient, power: 1.0})));
+                },
+            };
+            stored_coefficient = 1.0;
+            buffer.clear();
         } else if char == '/' {
             output_vec.insert(0, Op(LeftParenthesis));  // "Onion" algorithm. adds layers of parenthesis
             output_vec.push(Op(RightParenthesis));      // until the order of operations checks out
             output_vec.push(wrap_buffer(char));
 
+            match chars.clone().next() {
+                Some('-') => {// if after an op the next char is a '-', assume that it is part of the next number
+                    buffer += &chars.next().unwrap().to_string();
+                },
+                _ => {},
+            }
         } else if is_operation(char) {
             output_vec.push(wrap_buffer(char));
 
-        } else if char.is_whitespace() {
-            // ignore
+            match chars.clone().next() {
+                Some('-') => {// if after an op the next char is a '-', assume that it is part of the next number
+                    buffer += &chars.next().unwrap().to_string();
+                },
+                _ => {},
+            }
         } else {
             panic!("Invalid char, must be a num, variable, or operation");
 
@@ -74,6 +129,7 @@ pub fn interpret(input: String) -> Vec<ExpressionComponents>{
         };//peek at next value
     }
 
+    println!("output vec: {:?}", output_vec);
     output_vec
 }//end of interpret
 
@@ -124,8 +180,7 @@ mod tests {
         let out_vec = interpret(input);
 
         let cmp_vec: Vec<ExpressionComponents> =
-        vec![Type(Float(24.0)), Op(Multiply),
-        Type(Variable( Variable { symbol: 'x', coefficient: 1.0, power: 1.0})),
+        vec![Type(Variable( Variable { symbol: 'x', coefficient: 24.0, power: 1.0})),
         Op(Multiply),
         Op(LeftParenthesis), Type(Float(32.03)), Op(Add), Type(Float(12.0)), Op(RightParenthesis)];
 
@@ -141,8 +196,7 @@ mod tests {
         let out_vec = interpret(input);
 
         let cmp_vec: Vec<ExpressionComponents> = vec![
-        Op(LeftParenthesis), Type(Float(28.0)),
-        Op(Multiply), Type(Variable(Variable { symbol: 'x', power: 1.0, coefficient: 1.0 })),
+        Op(LeftParenthesis), Type(Variable(Variable { symbol: 'x', power: 1.0, coefficient: 28.0 })),
         Op(RightParenthesis),
         Op(Divide),
         Type(Float(32.021))];
@@ -164,17 +218,14 @@ mod tests {
         Type(Float(3.0)),
         Op(RightParenthesis),
         Op(Divide),
-        Type(Variable(Variable { symbol: 'z', power: 1.0, coefficient: 1.0 })),
-        Op(Exponent),
-        Type(Float(75.0)),
+        Type(Variable(Variable { symbol: 'z', power: 75.0, coefficient: 1.0 })),
         Op(RightParenthesis),
         Op(Divide),
         Type(Float(2.0)),
         Op(RightParenthesis),
         Op(Divide),
-        Type(Variable(Variable { symbol: 'z', power: 1.0, coefficient: 1.0 })),
-        Op(Exponent),
-        Type(Float(2.0))];
+        Type(Variable(Variable { symbol: 'z', power: 2.0, coefficient: 1.0 })),
+        ];
 
         assert_eq!(cmp_vec, out_vec);
     }
@@ -191,6 +242,25 @@ mod tests {
         Op(RightParenthesis),
         Op(Divide),
         Type(Float(46.0)),
+        ];
+
+        let out_vec = interpret(input);
+        assert_eq!(cmp_vec, out_vec);
+    }
+
+    #[test]
+    fn lots_of_negatives() {
+        let input = String::from("-2.0/-4.0x^-1.0 - -4.0 * -5.0");
+        let cmp_vec: Vec<ExpressionComponents> = vec![
+        Op(LeftParenthesis),
+        Type(Float(-2.0)),
+        Op(RightParenthesis),
+        Op(Divide),
+        Type(Variable(Variable { symbol: 'x', power: -1.0, coefficient: -4.0 })),
+        Op(Subtract),
+        Type(Float(-4.0)),
+        Op(Multiply),
+        Type(Float(-5.0)),
         ];
 
         let out_vec = interpret(input);

@@ -307,9 +307,10 @@ impl Operations for f64 {
         match num2 {
             Float(value) => Ok(Float(num1 * value)),
             Fraction(value) => Ok(Float(num1 * value.to_float())),
-            Variable(value) => Ok(Expression(Expression {
-                operation: Operand::Multiply,
-                values: vec![Float(num1), Variable(value)],
+            Variable(value) => Ok(Variable(Variable {
+                symbol: value.symbol,
+                coefficient: value.coefficient * num1,
+                power: value.power,
             })),
             Expression(_) => Err(()),
         }

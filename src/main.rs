@@ -14,7 +14,7 @@ fn main() {
         // evaluate
         let out_vec = crate::evaluator::evaluate_stack(&mut in_vec);
 
-        // display
+        // displayx
         println!("{}", crate::io::format_expression(out_vec));
 
     } //repeat
