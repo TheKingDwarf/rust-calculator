@@ -27,21 +27,22 @@ pub fn format_expression(input: Vec<ExpressionComponents>) -> String {
                 }
             },
             Type(Expression(t)) => {
-                let mut type_vec = t.values.clone();
 
+                output += "(";
                 output += &format_expression(
                     vec!(
-                        Type(type_vec.pop().unwrap()),
+                        Type(t.values[0].clone()),
                         Op(t.operation),
-                        Type(type_vec.pop().unwrap()),
+                        Type(t.values[1].clone()),
                     )
-                )
+                );
+                output += ")";
             }
             Op(LeftParenthesis)  => output += "(",
             Op(RightParenthesis) => output += ")",
             Op(Exponent) => output += "^",
-            Op(Multiply) => output += " * ", 
-            Op(Divide) => output += " / ", 
+            Op(Multiply) => output += " * ",
+            Op(Divide) => output += " / ",
             Op(Subtract) => output += " - ",
             Op(Add) => output += " + ",
 

@@ -42,14 +42,20 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
         }
 
         println!("inoperable vec: {:?}", inoperable_expression);
-    //    println!("nums vec: {:?}", nums);
+        println!("\nnums vec: {:?}\n", nums);
 
     }
+
+    println!("\nnums vec 49: {:?}\n", nums);
+
 
     while !ops.is_empty() {
-	println!("\n----popping ops");
+	//println!("\n----popping ops");
         pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
     }
+
+    println!("\nnums vec 57: {:?}\n", nums);
+
 
     // push the simplified value to inoperable expression
     // or turn a final expression into its components and push to inoperable_expression
@@ -67,7 +73,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 	},
 	None => {}
     }
-    
+
     inoperable_expression
 }
 
@@ -75,14 +81,31 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
  fn pop_expression(nums: &mut Vec<Types>, ops: &mut Vec<Operand>, inoperable_expression: &mut Vec<ExpressionComponents>) {
 //     println!("\nOps Stack: {:?}", ops);
 //     println!("Types Stack: {:?}", nums);
-     println!("\nNums: {:?},\nOps: {:?}\n", &nums, &ops);
-     let exp = Expression {
+    // println!("\nNums: {:?},\nOps: {:?}\n", &nums, &ops);
+     let mut exp = Expression {
          values: vec![nums.pop().unwrap(), nums.pop().unwrap()],
          operation: ops.pop().unwrap(),
      };
 
+     match &exp.values[1] {
+         Expression(_) => {
+             exp.values.swap(0,1);
+         },
+         _ => {},
+     }
+
      match &exp.values[0] {
          Expression(internal_exp) => {
+             let returned = evaluate_expression(exp.clone());
+
+             println!("\n{:?} != {:?}?\n", returned, Expression(exp.clone()));
+
+             if returned != Expression(exp.clone()) {
+                 println!("swag");
+                 nums.push(returned);
+                 return ();
+             }
+
              // split the Expression, and push to inoperable_expression
             { // brackets here for scoping reasons
                 inoperable_expression.push(Type(internal_exp.values[0].clone()));
@@ -91,6 +114,12 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
             }
              //other setup
              inoperable_expression.push(Op(exp.operation.clone()));
+
+             if ops.len() < 1 {
+                 inoperable_expression.push(Type(exp.values[1].clone()));
+                 return ();
+             }
+
              let value = exp.values[1].clone();
              let operation = ops.pop().unwrap();
 
@@ -153,7 +182,7 @@ pub fn evaluate_expression(expression: Expression) -> Types {
         Float(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
         Fraction(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
         Variable(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
-        _ => Err(()),
+        Expression(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
     };
 
     match returned { // iff the operation returned error, return the input expression

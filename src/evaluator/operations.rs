@@ -398,11 +398,36 @@ impl Operations for Expression {
     }
     #[allow(unused_variables)]
     fn multiply(num1: Self, num2: Types) -> Result<Types, ()>{
+        // distributive property
+        if num1.operation == Add || num1.operation == Subtract {
+            // evaluate each value seperately
+            let returned = (
+                crate::evaluator::evaluate_expression(
+                    Expression {
+                        values: vec!(num1.values[0].clone(), num2.clone()),
+                        operation: Multiply,
+                    }
+                ),
+                crate::evaluator::evaluate_expression(
+                    Expression {
+                        values: vec!(num1.values[1].clone(), num2.clone()),
+                        operation: Multiply,
+                    }
+                ),
+            );
+
+            return Ok(Expression( Expression{
+                values: vec!(returned.0, returned.1),
+                operation: num1.operation
+            }));
+        }
+
         Err(())
     }
     #[allow(unused_variables)]
     fn divide(num1: Self, num2: Types) -> Result<Types, ()> {
         Err(())
+
     }
     #[allow(unused_variables)]
     fn negative(num1: Self) -> Self {
