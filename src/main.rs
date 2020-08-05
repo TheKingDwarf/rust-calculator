@@ -12,9 +12,9 @@ fn main() {
         let mut in_vec = crate::interpreter::interpret(input);
 
         // evaluate
-        let out_vec = crate::evaluator::evaluate_stack(&mut in_vec);
+        let mut out_vec = crate::evaluator::evaluate_stack(&mut in_vec);
 
-        // displayx
+        // display
         println!("{}", crate::io::format_expression(out_vec));
 
     } //repeat

@@ -8,8 +8,14 @@ pub fn interpret(mut input: String) -> Vec<ExpressionComponents>{
 
     //buffer used to store single number
     let mut buffer = "".to_string();
-    let mut peek: char = chars.clone().next().unwrap();
 
+    // if chars is empty then the output vec will be empty,
+    // and this line will not error since we won't unwrap a "None" value
+    let mut peek: char = ' ';
+    if !chars.as_str().is_empty() {
+	peek = chars.clone().next().unwrap();
+    }
+    
     if (peek == '-') {
         buffer += &chars.next().unwrap().to_string();
     }

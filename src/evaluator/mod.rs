@@ -51,20 +51,24 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
     }
 
     // push the simplified value to inoperable expression
-    // or turn a final expression into its componenets and push to inoperable_expression
-    match nums.pop().unwrap() {
-        Expression(exp) => {
-            inoperable_expression.push(Type(exp.values[0].clone()));
-            inoperable_expression.push(Op(exp.operation.clone()));
-            inoperable_expression.push(Type(exp.values[1].clone()));
-        },
-        other => inoperable_expression.push(Type(other)),
+    // or turn a final expression into its components and push to inoperable_expression
+    // don't unwrap right away since our nums vector might be empty
+    match nums.pop() {
+	Some(inoperable) => {
+	    match inoperable {
+		Expression(exp) => {
+		    inoperable_expression.push(Type(exp.values[0].clone()));
+		    inoperable_expression.push(Op(exp.operation.clone()));
+		    inoperable_expression.push(Type(exp.values[1].clone()));
+		},
+		other => inoperable_expression.push(Type(other)),
+	    }
+	},
+	None => {}
     }
-
-
-
+    
     inoperable_expression
- }
+}
 
 // simply abstracted this behaviour to a function since its called multiple times above
  fn pop_expression(nums: &mut Vec<Types>, ops: &mut Vec<Operand>, inoperable_expression: &mut Vec<ExpressionComponents>) {
