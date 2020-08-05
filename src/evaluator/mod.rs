@@ -47,6 +47,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
     }
 
     while !ops.is_empty() {
+	println!("\n----popping ops");
         pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
     }
 
@@ -73,8 +74,8 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 // simply abstracted this behaviour to a function since its called multiple times above
  fn pop_expression(nums: &mut Vec<Types>, ops: &mut Vec<Operand>, inoperable_expression: &mut Vec<ExpressionComponents>) {
 //     println!("\nOps Stack: {:?}", ops);
-//     println!("Types Stack: {:?}\n", nums);
-     //println!("Nums: {:?}, Ops: {:?}", &nums, &ops);
+//     println!("Types Stack: {:?}", nums);
+     println!("\nNums: {:?},\nOps: {:?}\n", &nums, &ops);
      let exp = Expression {
          values: vec![nums.pop().unwrap(), nums.pop().unwrap()],
          operation: ops.pop().unwrap(),
