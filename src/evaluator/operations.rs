@@ -451,31 +451,21 @@ impl Operations for Expression {
 		    }));
 		}
 
-<<<<<<< HEAD
 		let expression_case2 = crate::evaluator::evaluate_expression(
 		    Expression {
 			values: vec!(num1.values[1].clone(), num2.clone()),
 			operation: Subtract
 		    });
-=======
-	let expression_case2 = crate::evaluator::evaluate_expression(
-	    Expression {
-		values: vec!(num1.values[1].clone(), num2.clone()),
-		operation: Add
-	    });
-
-	if expression_case2 != Expression(Expression {
-		values: vec!(num1.values[1].clone(), num2.clone()),
-		operation: Add
-	}) {
-	    println!("SWAGG2");
-	    return Ok(Expression(Expression {
-		values: vec!(num1.values[0].clone(), expression_case2),
-		operation: num1.operation
-	    }));
-	}
->>>>>>> 4a4826c53b71a8a5d1a8c7a7d17ae13ba44c3efe
-
+		
+		if expression_case2 != Expression(Expression {
+		    values: vec!(num1.values[1].clone(), num2.clone()),
+		    operation: Add
+		}) {
+		    return Ok(Expression(Expression {
+			values: vec!(num1.values[0].clone(), expression_case2),
+			operation: num1.operation
+		    }));
+		}
 		if expression_case2 != Expression(Expression {
 		    values: vec!(num1.values[1].clone(), num2.clone()),
 		    operation: Subtract
@@ -493,12 +483,12 @@ impl Operations for Expression {
 		let expression_case1 = crate::evaluator::evaluate_expression(
 		    Expression {
 			values: vec!(num1.values[0].clone(), num2.clone()),
-			operation: Subtract
+			operation: Add
 		    });
 		
 		if expression_case1 != Expression(Expression {
 		    values: vec!(num1.values[0].clone(), num2.clone()),
-		    operation: Subtract
+		    operation: Add
 		}) {
 		    return Ok(Expression(Expression {
 			values: vec!(expression_case1, num1.values[1].clone()),
@@ -509,12 +499,12 @@ impl Operations for Expression {
 		let expression_case2 = crate::evaluator::evaluate_expression(
 		    Expression {
 			values: vec!(num1.values[1].clone(), num2.clone()),
-			operation: Subtract
+			operation: Add
 		    });
 		
 		if expression_case2 != Expression(Expression {
 		    values: vec!(num1.values[1].clone(), num2.clone()),
-		    operation: Subtract
+		    operation: Add
 		}) {
 		    return Ok(Expression(Expression {
 			values: vec!(num1.values[0].clone(), expression_case2),
