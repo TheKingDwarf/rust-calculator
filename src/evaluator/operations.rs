@@ -389,13 +389,82 @@ impl Operations for Expression {
 
     #[allow(unused_variables)]
     fn add(num1: Self, num2: Types) -> Result<Types, ()> {
-        Err(())
+	let expression_case1 = crate::evaluator::evaluate_expression(
+	    Expression {
+		values: vec!(num1.values[0].clone(), num2.clone()),
+		operation: Add
+	    });
+
+	if expression_case1 != Expression(Expression {
+		values: vec!(num1.values[0].clone(), num2.clone()),
+		operation: Add
+	    }) {
+	    return Ok(Expression(Expression {
+		values: vec!(expression_case1, num1.values[1].clone()),
+		operation: num1.operation
+	    }));
+	}
+
+	let expression_case2 = crate::evaluator::evaluate_expression(
+	    Expression {
+		values: vec!(num1.values[1].clone(), num2.clone()),
+		operation: Add
+	    });
+
+	if expression_case2 != Expression(Expression {
+		values: vec!(num1.values[1].clone(), num2.clone()),
+		operation: Add
+	}) {
+	    return Ok(Expression(Expression {
+		values: vec!(num1.values[0].clone(), expression_case2),
+		operation: num1.operation
+	    }));
+	}
+
+	Err(())
     }
+    
     #[allow(unused_variables)]
     fn sub(num1: Self, num2: Types) -> Result<Types, ()> {
-        Err(())
 
+	println!("SUBBING");
+	let expression_case1 = crate::evaluator::evaluate_expression(
+	    Expression {
+		values: vec!(num1.values[0].clone(), num2.clone()),
+		operation: Subtract
+	    });
+
+	if expression_case1 != Expression(Expression {
+		values: vec!(num1.values[0].clone(), num2.clone()),
+		operation: Subtract
+	}) {
+	    println!("SWAGG");
+	    return Ok(Expression(Expression {
+		values: vec!(expression_case1, num1.values[1].clone()),
+		operation: num1.operation
+	    }));
+	}
+
+	let expression_case2 = crate::evaluator::evaluate_expression(
+	    Expression {
+		values: vec!(num1.values[1].clone(), num2.clone()),
+		operation: Subtract
+	    });
+
+	if expression_case2 != Expression(Expression {
+		values: vec!(num1.values[1].clone(), num2.clone()),
+		operation: Subtract
+	}) {
+	    println!("SWAGG2");
+	    return Ok(Expression(Expression {
+		values: vec!(num1.values[0].clone(), expression_case2),
+		operation: num1.operation
+	    }));
+	}
+
+	Err(())
     }
+    
     #[allow(unused_variables)]
     fn multiply(num1: Self, num2: Types) -> Result<Types, ()>{
         // distributive property
