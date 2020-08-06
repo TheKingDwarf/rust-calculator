@@ -142,8 +142,20 @@ impl Operations for Fraction {
 impl Operations for Variable {
     fn add(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
-            Float(_) => Err(()),
-            Fraction(_) => Err(()),
+            Float(t) => {
+                if t == 0.0 {
+                    return Ok(Variable(num1));
+                }
+
+                Err(())
+            },
+            Fraction(t) => {
+                if t.numerator == 0 {
+                    return Ok(Variable(num1));
+                }
+
+                Err(())
+            },
             Variable(value) => if value.symbol == num1.symbol && value.power == num1.power {
                 Ok(Variable(Variable {
                     symbol: value.symbol,
@@ -162,8 +174,20 @@ impl Operations for Variable {
 
     fn sub(num1: Self, num2: Types) -> Result<Types, ()> {
         match num2 {
-            Float(_) => Err(()),
-            Fraction(_) => Err(()),
+            Float(t) => {
+                if t == 0.0 {
+                    return Ok(Variable(num1));
+                }
+
+                Err(())
+            },
+            Fraction(t) => {
+                if t.numerator == 0 {
+                    return Ok(Variable(num1));
+                }
+
+                Err(())
+            },
             Variable(value) => if value.symbol == num1.symbol && value.power == num1.power {
                 Ok(Variable(Variable {
                     symbol: value.symbol,
@@ -397,7 +421,7 @@ impl Operations for Expression {
 			values: vec!(num1.values[0].clone(), num2.clone()),
 			operation: Add
 		    });
-		
+
 		if expression_case1 != Expression(Expression {
 		    values: vec!(num1.values[0].clone(), num2.clone()),
 		    operation: Add
@@ -425,7 +449,7 @@ impl Operations for Expression {
 		} else {
 		    Err(())
 		}
-		    
+
 	    },
 	    _ => Err(())
 	}
