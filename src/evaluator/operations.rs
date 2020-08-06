@@ -447,10 +447,7 @@ impl Operations for Expression {
 		    }));
 		} else {
 		    Err(())
-		}
-<<<<<<< HEAD
-
-=======
+        }
 	    },
 	    Subtract => {
 		let expression_case1 = crate::evaluator::evaluate_expression(
@@ -458,7 +455,7 @@ impl Operations for Expression {
 			values: vec!(num1.values[0].clone(), num2.clone()),
 			operation: Subtract
 		    });
-		
+
 		if expression_case1 != Expression(Expression {
 		    values: vec!(num1.values[0].clone(), num2.clone()),
 		    operation: Subtract
@@ -486,7 +483,6 @@ impl Operations for Expression {
 		} else {
 		    Err(())
 		}
->>>>>>> daebbead8407e9718b82f8d2a62fd2e9288ad555
 	    },
 	    _ => Err(())
 	}
@@ -518,7 +514,7 @@ impl Operations for Expression {
 			values: vec!(num1.values[1].clone(), num2.clone()),
 			operation: Subtract
 		    });
-		
+
 		if expression_case2 != Expression(Expression {
 		    values: vec!(num1.values[1].clone(), num2.clone()),
 		    operation: Add
@@ -540,14 +536,14 @@ impl Operations for Expression {
 		    return Err(());
 		}
 	    },
-	    
+
 	    Subtract => {
 		let expression_case1 = crate::evaluator::evaluate_expression(
 		    Expression {
 			values: vec!(num1.values[0].clone(), num2.clone()),
 			operation: Add
 		    });
-		
+
 		if expression_case1 != Expression(Expression {
 		    values: vec!(num1.values[0].clone(), num2.clone()),
 		    operation: Add
@@ -557,13 +553,13 @@ impl Operations for Expression {
 			operation: num1.operation
 		    }));
 		}
-		
+
 		let expression_case2 = crate::evaluator::evaluate_expression(
 		    Expression {
 			values: vec!(num1.values[1].clone(), num2.clone()),
 			operation: Add
 		    });
-		
+
 		if expression_case2 != Expression(Expression {
 		    values: vec!(num1.values[1].clone(), num2.clone()),
 		    operation: Add
@@ -574,9 +570,9 @@ impl Operations for Expression {
 		    }));
 		} else {
 		    return Err(());
-		}		
+		}
 	    },
-	    
+
 	    _ => Err(())
 	}
     }
