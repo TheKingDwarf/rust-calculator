@@ -41,8 +41,10 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
             },
         }
 
-        println!("inoperable vec: {:?}", inoperable_expression);
-        println!("\nnums vec: {:?}\n", nums);
+        // println!("inoperable vec: {:?}", inoperable_expression);
+        println!("\nnums vec: {:?}", nums);
+        println!("ops vec: {:?}\n", ops);
+
 
     }
 
@@ -110,7 +112,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
                  if returned != internal_returned {
                      println!("extra swag.");
-                     nums.push(internal_returned);
+                        nums.push(internal_returned);
                      return ();
                  }
 
