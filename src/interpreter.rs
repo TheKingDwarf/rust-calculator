@@ -15,7 +15,7 @@ pub fn interpret(mut input: String) -> Vec<ExpressionComponents>{
     if !chars.as_str().is_empty() {
 	peek = chars.clone().next().unwrap();
     }
-    
+
     if (peek == '-') {
         buffer += &chars.next().unwrap().to_string();
     }
@@ -116,7 +116,7 @@ pub fn interpret(mut input: String) -> Vec<ExpressionComponents>{
                 _ => {},
             }
         } else if char == '*' { // perform the same procedure for "*" so we simplify fully for multiplication
-            output_vec.insert(0, Op(LeftParenthesis));  // "Onion" algorithm. adds layers of parenthesis 
+            output_vec.insert(0, Op(LeftParenthesis));  // "Onion" algorithm. adds layers of parenthesis
             output_vec.push(Op(RightParenthesis));      // until the order of operations checks out
             output_vec.push(wrap_buffer(char));
 
@@ -130,7 +130,7 @@ pub fn interpret(mut input: String) -> Vec<ExpressionComponents>{
             output_vec.push(wrap_buffer(char));
 
             match chars.clone().next() {
-                Some('-') => {// if after an op the next char is a '-', assume that it is part of the next number
+                Some('-') if char != ')' && char != '(' => {// if after an op the next char is a '-', assume that it is part of the next number
                     buffer += &chars.next().unwrap().to_string();
                 },
                 _ => {},
