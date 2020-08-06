@@ -413,9 +413,8 @@ impl Operations for Expression {
 
     #[allow(unused_variables)]
     fn add(num1: Self, num2: Types) -> Result<Types, ()> {
-
 	match num1.operation {
-	    Add | Subtract => {
+	    Add => {
 		let expression_case1 = crate::evaluator::evaluate_expression(
 		    Expression {
 			values: vec!(num1.values[0].clone(), num2.clone()),
@@ -449,7 +448,45 @@ impl Operations for Expression {
 		} else {
 		    Err(())
 		}
+<<<<<<< HEAD
 
+=======
+	    },
+	    Subtract => {
+		let expression_case1 = crate::evaluator::evaluate_expression(
+		    Expression {
+			values: vec!(num1.values[0].clone(), num2.clone()),
+			operation: Subtract
+		    });
+		
+		if expression_case1 != Expression(Expression {
+		    values: vec!(num1.values[0].clone(), num2.clone()),
+		    operation: Subtract
+		}) {
+		    return Ok(Expression(Expression {
+			values: vec!(expression_case1, num1.values[1].clone()),
+			operation: num1.operation
+		    }));
+		}
+
+		let expression_case2 = crate::evaluator::evaluate_expression(
+		    Expression {
+			values: vec!(num1.values[1].clone(), num2.clone()),
+			operation: Subtract
+		    });
+
+		if expression_case2 != Expression(Expression {
+		    values: vec!(num1.values[1].clone(), num2.clone()),
+		    operation: Subtract
+		}) {
+		    return Ok(Expression(Expression {
+			values: vec!(num1.values[0].clone(), expression_case2),
+			operation: num1.operation
+		    }));
+		} else {
+		    Err(())
+		}
+>>>>>>> daebbead8407e9718b82f8d2a62fd2e9288ad555
 	    },
 	    _ => Err(())
 	}
@@ -459,41 +496,89 @@ impl Operations for Expression {
     fn sub(num1: Self, num2: Types) -> Result<Types, ()> {
 
 	println!("SUBBING");
-	let expression_case1 = crate::evaluator::evaluate_expression(
-	    Expression {
-		values: vec!(num1.values[0].clone(), num2.clone()),
-		operation: Subtract
-	    });
+	match num1.operation {
+	    Add => {
+		let expression_case1 = crate::evaluator::evaluate_expression(
+		    Expression {
+			values: vec!(num1.values[0].clone(), num2.clone()),
+			operation: Subtract
+		    });
+		if expression_case1 != Expression(Expression {
+		    values: vec!(num1.values[0].clone(), num2.clone()),
+		    operation: Subtract
+		}) {
+		    return Ok(Expression(Expression {
+			values: vec!(expression_case1, num1.values[1].clone()),
+			operation: num1.operation
+		    }));
+		}
 
-	if expression_case1 != Expression(Expression {
-		values: vec!(num1.values[0].clone(), num2.clone()),
-		operation: Subtract
-	}) {
-	    println!("SWAGG");
-	    return Ok(Expression(Expression {
-		values: vec!(expression_case1, num1.values[1].clone()),
-		operation: num1.operation
-	    }));
+		let expression_case2 = crate::evaluator::evaluate_expression(
+		    Expression {
+			values: vec!(num1.values[1].clone(), num2.clone()),
+			operation: Subtract
+		    });
+		
+		if expression_case2 != Expression(Expression {
+		    values: vec!(num1.values[1].clone(), num2.clone()),
+		    operation: Add
+		}) {
+		    return Ok(Expression(Expression {
+			values: vec!(num1.values[0].clone(), expression_case2),
+			operation: num1.operation
+		    }));
+		}
+		if expression_case2 != Expression(Expression {
+		    values: vec!(num1.values[1].clone(), num2.clone()),
+		    operation: Subtract
+		}) {
+		    return Ok(Expression(Expression {
+			values: vec!(num1.values[0].clone(), expression_case2),
+			operation: num1.operation
+		    }));
+		} else {
+		    return Err(());
+		}
+	    },
+	    
+	    Subtract => {
+		let expression_case1 = crate::evaluator::evaluate_expression(
+		    Expression {
+			values: vec!(num1.values[0].clone(), num2.clone()),
+			operation: Add
+		    });
+		
+		if expression_case1 != Expression(Expression {
+		    values: vec!(num1.values[0].clone(), num2.clone()),
+		    operation: Add
+		}) {
+		    return Ok(Expression(Expression {
+			values: vec!(expression_case1, num1.values[1].clone()),
+			operation: num1.operation
+		    }));
+		}
+		
+		let expression_case2 = crate::evaluator::evaluate_expression(
+		    Expression {
+			values: vec!(num1.values[1].clone(), num2.clone()),
+			operation: Add
+		    });
+		
+		if expression_case2 != Expression(Expression {
+		    values: vec!(num1.values[1].clone(), num2.clone()),
+		    operation: Add
+		}) {
+		    return Ok(Expression(Expression {
+			values: vec!(num1.values[0].clone(), expression_case2),
+			operation: num1.operation
+		    }));
+		} else {
+		    return Err(());
+		}		
+	    },
+	    
+	    _ => Err(())
 	}
-
-	let expression_case2 = crate::evaluator::evaluate_expression(
-	    Expression {
-		values: vec!(num1.values[1].clone(), num2.clone()),
-		operation: Add
-	    });
-
-	if expression_case2 != Expression(Expression {
-		values: vec!(num1.values[1].clone(), num2.clone()),
-		operation: Add
-	}) {
-	    println!("SWAGG2");
-	    return Ok(Expression(Expression {
-		values: vec!(num1.values[0].clone(), expression_case2),
-		operation: num1.operation
-	    }));
-	}
-
-	Err(())
     }
 
     #[allow(unused_variables)]
