@@ -101,6 +101,19 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
              println!("\n{:?} != {:?}?\n", returned, Expression(exp.clone()));
 
              if returned != Expression(exp.clone()) {
+                 // try and evaluate remaining expression
+                 let unwrapped_returned = match returned.clone() {
+                     Expression(t) => t,
+                     _ => panic!(),
+                 };
+                 let internal_returned = evaluate_expression(unwrapped_returned);
+
+                 if returned != internal_returned {
+                     println!("extra swag.");
+                     nums.push(internal_returned);
+                     return ();
+                 }
+
                  println!("swag");
                  nums.push(returned);
                  return ();
@@ -171,7 +184,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
  }
 
  //this function will translate an operator into an expression evaluation
- //using the functions we made in numbers.rs
+ //using the functions we made in numbers.rs 🤡🤡🤡
 pub fn evaluate_expression(expression: Expression) -> Types {
     /*  youll notice weird redundancy going on here
         its because each one of the types inside an enum is different,
@@ -192,7 +205,7 @@ pub fn evaluate_expression(expression: Expression) -> Types {
 }
 
 fn get_operation<T: Operations>(values: (T, Types), op: Operand) -> Result<Types, ()> {
-    match op {
+    match op { // 🤡🤡
         // Exponent => Operations::exponentiate(values.0, values.1),
         Multiply => Operations::multiply(values.0, values.1),
         Divide => Operations::divide(values.0, values.1),
