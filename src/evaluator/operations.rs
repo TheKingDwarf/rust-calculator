@@ -405,6 +405,30 @@ impl Operations for f64 {
     }
 }
 
+impl Expression {
+    pub fn to_stack(self) -> Vec<ExpressionComponents> {
+
+        let mut n_types_popped: u64 = 0;
+        let mut output: Vec<ExpressionComponents> = Vec::new();
+
+        while !self.values.is_empty() {
+            if n_types_popped > 1 {
+                output.push(Op(self.operation.clone().pop().unwrap()));
+                output.push(Type(self.values.clone().pop().unwrap()));
+                n_types_popped += 1;
+            }
+            else { // since it is a given that an expression will always
+                // have at least 2 numbers -
+                output.push(Type(self.values.clone().pop().unwrap()));
+                output.push(Op(self.operation.clone().pop().unwrap()));
+                output.push(Type(self.values.clone().pop().unwrap()));
+                n_types_popped += 2;
+            }
+        }
+        output
+    }
+}
+
 impl Operations for Expression {
     #[allow(unused_variables)]
     fn exponentiate(num1: Self, num2: Types) -> Result<Types, ()> {
@@ -417,14 +441,20 @@ impl Operations for Expression {
         let mut next_operator = RightParenthesis;
         let mut n = Float(0.0);
 
-        for i in 0..num1.values.len() {
-            n = num1.values[i];
-            next_operator = num1.operation[i];
+        for i in 0..num1.values.clone().len() {
+            println!("{}", i);
+            n = num1.values[i].clone();
+
+            if num1.operation.clone().len() <= i {
+                next_operator = RightParenthesis;
+            } else {
+                next_operator = num1.operation[i];
+            }
 
             if next_operator == LeftParenthesis {
                 while next_operator != RightParenthesis {
                     let i = i + 1;
-                    n = num1.values[i];
+                    n = num1.values[i].clone();
                     next_operator = num1.operation[i];
                 }
             }
@@ -438,16 +468,16 @@ impl Operations for Expression {
                 }
 
                 let input = Expression {
-                    values: vec!(n, num2),
+                    values: vec!(n, num2.clone()),
                     operation: vec!(operator)
                 };
 
                 let returned = crate::evaluator::evaluate_expression(
-                    input
+                    input.clone()
                 );
 
                 if returned != Expression(input) {
-                    let return_expression = Expression {
+                    let mut return_expression = Expression {
                         values: vec![],
                         operation: vec![],
                     };
@@ -472,8 +502,15 @@ impl Operations for Expression {
             previous_operator = next_operator;
         }
 
-        Err(())
+        let mut return_expression = Expression {
+            values: num1.values.clone(),
+            operation: num1.operation.clone(),
+        };
 
+        return_expression.values.push(num2.clone());
+        return_expression.operation.push(Add);
+
+        Ok(Expression(return_expression))
 
 	// match num1.operation {
 	//     Add => {
@@ -556,14 +593,14 @@ impl Operations for Expression {
         let mut next_operator = RightParenthesis;
         let mut n = Float(0.0);
 
-        for i in 0..num1.values.len() {
-            n = num1.values[i];
+        for i in 0..num1.values.clone().len() {
+            n = num1.values[i].clone();
             next_operator = num1.operation[i];
 
             if next_operator == LeftParenthesis {
                 while next_operator != RightParenthesis {
                     let i = i + 1;
-                    n = num1.values[i];
+                    n = num1.values[i].clone();
                     next_operator = num1.operation[i];
                 }
             }
@@ -577,16 +614,16 @@ impl Operations for Expression {
                 }
 
                 let input = Expression {
-                    values: vec!(n, num2),
+                    values: vec!(n, num2.clone()),
                     operation: vec!(operator)
                 };
 
                 let returned = crate::evaluator::evaluate_expression(
-                    input
+                    input.clone()
                 );
 
                 if returned != Expression(input) {
-                    let return_expression = Expression {
+                    let mut return_expression = Expression {
                         values: vec![],
                         operation: num1.operation.clone(),
                     };

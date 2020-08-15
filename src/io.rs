@@ -27,15 +27,18 @@ pub fn format_expression(input: Vec<ExpressionComponents>) -> String {
                 }
             },
             Type(Expression(t)) => {
-
                 output += "(";
-                output += &format_expression(
-                    vec!(
-                        Type(t.values[0].clone()),
-                        Op(t.operation),
-                        Type(t.values[1].clone()),
-                    )
-                );
+
+                output += &format_expression(t.to_stack());
+
+                // output += &format_expression(
+                //     vec!(
+                //         Type(t.values[0].clone()),
+                //         Op(t.operation),
+                //         Type(t.values[1].clone()),
+                //     )
+                // );
+
                 output += ")";
             }
             Op(LeftParenthesis)  => output += "(",

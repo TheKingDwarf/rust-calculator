@@ -66,9 +66,11 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 	Some(inoperable) => {
 	    match inoperable {
 		Expression(exp) => {
-		    inoperable_expression.push(Type(exp.values[0].clone()));
-		    inoperable_expression.push(Op(exp.operation.clone()));
-		    inoperable_expression.push(Type(exp.values[1].clone()));
+		    inoperable_expression.push(Type(exp.values[0].clone())); // push first number
+            for i in 0..exp.operation.len() {
+                inoperable_expression.push(Op(exp.operation[i].clone()));
+	            inoperable_expression.push(Type(exp.values[i+1].clone()));
+            }
 		},
 		other => inoperable_expression.push(Type(other)),
 	    }
@@ -86,7 +88,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
     // println!("\nNums: {:?},\nOps: {:?}\n", &nums, &ops);
      let mut exp = Expression {
          values: vec![nums.pop().unwrap(), nums.pop().unwrap()],
-         operation: ops.pop().unwrap(),
+         operation: vec![ops.pop().unwrap()],
      };
 
      match &exp.values[1] {
@@ -104,15 +106,15 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
              if returned != Expression(exp.clone()) {
                  // try and evaluate remaining expression
-                 let unwrapped_returned = match returned.clone() {
+                 let mut unwrapped_returned = match returned.clone() {
                      Expression(t) => t,
                      _ => panic!(),
                  };
-                 let internal_returned = evaluate_expression(unwrapped_returned);
+                 let internal_returned = evaluate_stack(&mut unwrapped_returned.clone().to_stack());
 
-                 if returned != internal_returned {
+                 if unwrapped_returned.to_stack() != internal_returned {
                      println!("extra swag.");
-                        nums.push(internal_returned);
+                        nums.push(Expression(to_expression(internal_returned)));
                      return ();
                  }
 
@@ -121,50 +123,53 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
                  return ();
              }
 
+             // TODO: find a way to deal with inoperable expression.
+                // maybe combine into a larger expression object?
+
              // split the Expression, and push to inoperable_expression
-            { // brackets here for scoping reasons
-                inoperable_expression.push(Type(internal_exp.values[0].clone()));
-                inoperable_expression.push(Op(internal_exp.operation.clone()));
-                inoperable_expression.push(Type(internal_exp.values[1].clone()));
-            }
-             //other setup
-             inoperable_expression.push(Op(exp.operation.clone()));
-
-             if ops.len() < 1 {
-                 inoperable_expression.push(Type(exp.values[1].clone()));
-                 return ();
-             }
-
-             let value = exp.values[1].clone();
-             let operation = ops.pop().unwrap();
-
-             // basically clears information from nums and ops until we have something we can actually work with
-             while operation != Add && operation != Subtract {
-                 // push stuff onto inoperable so that we can ignore it
-                 inoperable_expression.push(Type(value.clone()));
-                 inoperable_expression.push(Op(operation.clone()));
-
-                 // redefine these values, so that we can do it again
-                 if nums.len() >= 2 {
-                     #[allow(unused_variables)]
-                     let value = nums.pop().unwrap();
-                     #[allow(unused_variables)]
-                     let operation = ops.pop().unwrap();
-                 } else { // if we run out of nums, we need to return
-                    if nums.len() == 1 {
-                        inoperable_expression.push(Type(nums.pop().unwrap())); //adds the final num
-                        inoperable_expression.push(Op(ops.pop().unwrap()));
-                    }
-                    return ();
-                 }
-
-             } // then loop again
-
-            // this effectively represents a "breakpoint", a spot where we can stop pushing to the inoperable nums
-
-            // put the final type and operation on the inoperablenums_stack
-            inoperable_expression.push(Type(value.clone()));
-            inoperable_expression.push(Op(operation.clone()));
+            // { // brackets here for scoping reasons
+            //     inoperable_expression.push(Type(internal_exp.values[0].clone()));
+            //     inoperable_expression.push(Op(internal_exp.operation[0].clone()));
+            //     inoperable_expression.push(Type(internal_exp.values[1].clone()));
+            // }
+            //  //other setup
+            //  inoperable_expression.push(Op(exp.operation[0].clone()));
+            //
+            //  if ops.len() < 1 {
+            //      inoperable_expression.push(Type(exp.values[1].clone()));
+            //      return ();
+            //  }
+            //
+            //  let value = exp.values[1].clone();
+            //  let operation = ops.pop().unwrap();
+            //
+            //  // basically clears information from nums and ops until we have something we can actually work with
+            //  while operation != Add && operation != Subtract {
+            //      // push stuff onto inoperable so that we can ignore it
+            //      inoperable_expression.push(Type(value.clone()));
+            //      inoperable_expression.push(Op(operation.clone()));
+            //
+            //      // redefine these values, so that we can do it again
+            //      if nums.len() >= 2 {
+            //          #[allow(unused_variables)]
+            //          let value = nums.pop().unwrap();
+            //          #[allow(unused_variables)]
+            //          let operation = ops.pop().unwrap();
+            //      } else { // if we run out of nums, we need to return
+            //         if nums.len() == 1 {
+            //             inoperable_expression.push(Type(nums.pop().unwrap())); //adds the final num
+            //             inoperable_expression.push(Op(ops.pop().unwrap()));
+            //         }
+            //         return ();
+            //      }
+            //
+            //  } // then loop again
+            //
+            // // this effectively represents a "breakpoint", a spot where we can stop pushing to the inoperable nums
+            //
+            // // put the final type and operation on the inoperablenums_stack
+            // inoperable_expression.push(Type(value.clone()));
+            // inoperable_expression.push(Op(operation.clone()));
 
             // then stop this method
             return ();
@@ -194,10 +199,10 @@ pub fn evaluate_expression(expression: Expression) -> Types {
     */
 
     let returned = match expression.values[0].clone() {
-        Float(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
-        Fraction(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
-        Variable(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
-        Expression(t) => get_operation((t, expression.values[1].clone()), expression.operation.clone()),
+        Float(t) => get_operation((t, expression.values[1].clone()), expression.operation[0].clone()),
+        Fraction(t) => get_operation((t, expression.values[1].clone()), expression.operation[0].clone()),
+        Variable(t) => get_operation((t, expression.values[1].clone()), expression.operation[0].clone()),
+        Expression(t) => get_operation((t, expression.values[1].clone()), expression.operation[0].clone()),
     };
 
     match returned { // iff the operation returned error, return the input expression
@@ -218,6 +223,21 @@ fn get_operation<T: Operations>(values: (T, Types), op: Operand) -> Result<Types
     }
 }
 
+fn to_expression(input: Vec<ExpressionComponents>) -> Expression {
+
+    let mut output = Expression {
+        values: vec![],
+        operation: vec![],
+    };
+
+    for i in 0..input.len() {
+        match input[i].clone() {
+            Type(t) => output.values.push(t.clone()),
+            Op(t) => output.operation.push(t.clone()),
+        }
+    }
+    output
+}
 
 #[cfg(test)]
 mod tests {
