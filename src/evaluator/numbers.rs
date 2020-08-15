@@ -51,7 +51,7 @@ pub struct Variable {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Expression {
     pub values: Vec<Types>,
-    pub operation: Operand,
+    pub operation: Vec<Operand>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
