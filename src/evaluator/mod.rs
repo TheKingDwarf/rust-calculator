@@ -52,7 +52,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
 
     while !ops.is_empty() {
-	//println!("\n----popping ops");
+        println!("\n----popping ops");
         pop_expression(&mut nums, &mut ops, &mut inoperable_expression);
     }
 
@@ -83,9 +83,9 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
 
 // simply abstracted this behaviour to a function since its called multiple times above
  fn pop_expression(nums: &mut Vec<Types>, ops: &mut Vec<Operand>, inoperable_expression: &mut Vec<ExpressionComponents>) {
-//     println!("\nOps Stack: {:?}", ops);
-//     println!("Types Stack: {:?}", nums);
-    // println!("\nNums: {:?},\nOps: {:?}\n", &nums, &ops);
+     println!("\nOps Stack: {:?}", ops);
+     println!("Types Stack: {:?}", nums);
+     println!("\nNums: {:?},\nOps: {:?}\n", &nums, &ops);
      let mut exp = Expression {
          values: vec![nums.pop().unwrap(), nums.pop().unwrap()],
          operation: vec![ops.pop().unwrap()],
@@ -105,6 +105,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
              println!("\n{:?} != {:?}?\n", returned, Expression(exp.clone()));
 
              if returned != Expression(exp.clone()) {
+                 println!("true");
                  // try and evaluate remaining expression
                  let mut unwrapped_returned = match returned.clone() {
                      Expression(t) => t,
@@ -122,7 +123,7 @@ pub fn evaluate_stack(stack: &mut Vec<ExpressionComponents>) -> Vec<ExpressionCo
                  nums.push(returned);
                  return ();
              }
-
+             println!("False");
              // TODO: find a way to deal with inoperable expression.
                 // maybe combine into a larger expression object?
 

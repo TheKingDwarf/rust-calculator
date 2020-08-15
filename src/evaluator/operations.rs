@@ -410,18 +410,20 @@ impl Expression {
 
         let mut n_types_popped: u64 = 0;
         let mut output: Vec<ExpressionComponents> = Vec::new();
+        let mut values_copy = self.values.clone();
+        let mut operation_copy = self.operation.clone();
 
-        while !self.values.is_empty() {
+        while !values_copy.is_empty() {
             if n_types_popped > 1 {
-                output.push(Op(self.operation.clone().pop().unwrap()));
-                output.push(Type(self.values.clone().pop().unwrap()));
+                output.push(Op(operation_copy.pop().unwrap()));
+                output.push(Type(values_copy.pop().unwrap()));
                 n_types_popped += 1;
             }
             else { // since it is a given that an expression will always
                 // have at least 2 numbers -
-                output.push(Type(self.values.clone().pop().unwrap()));
-                output.push(Op(self.operation.clone().pop().unwrap()));
-                output.push(Type(self.values.clone().pop().unwrap()));
+                output.push(Type(values_copy.pop().unwrap()));
+                output.push(Op(operation_copy.pop().unwrap()));
+                output.push(Type(values_copy.pop().unwrap()));
                 n_types_popped += 2;
             }
         }
